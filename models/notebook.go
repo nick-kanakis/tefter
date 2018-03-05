@@ -26,11 +26,11 @@ func (nBook *Notebook) AddNote(note *Note) bool{
 
 //RemoveNote remove note from Notebook list.
 //WARNING: when removing a note we should add it to a default notebook.
-func (nBook *Notebook) RemoveNote(noteId int64) bool{
-	if !doesNoteExist(nBook, noteId){
+func (nBook *Notebook) RemoveNote(noteID int64) bool{
+	if !doesNoteExist(nBook, noteID){
 		return false
 	}
-	delete(nBook.Notes, noteId)
+	delete(nBook.Notes, noteID)
 	return true
 }
 
