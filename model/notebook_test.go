@@ -11,7 +11,7 @@ func TestAddNote(t *testing.T) {
 	}
 
 	note := notebook.Notes[0]
-	if note.Notebook != notebook {
+	if note.NotebookID != notebook.ID {
 		t.Error("Could update reference to notebook in note")
 	}
 }

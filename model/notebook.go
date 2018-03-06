@@ -3,8 +3,8 @@ package model
 //Notebook holds a list of "similar" notes
 type Notebook struct {
 	ID    int64
-	Notes map[int64]*Note
 	Title string
+	Notes map[int64]*Note
 }
 
 //NewNotebook returns a Notebook pointer
@@ -22,7 +22,7 @@ func (nBook *Notebook) AddNote(note *Note) bool {
 		return false
 	}
 	nBook.Notes[note.ID] = note
-	note.UpdateNotebook(nBook)
+	note.UpdateNotebook(nBook.ID)
 	return true
 }
 

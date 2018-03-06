@@ -10,18 +10,18 @@ type Note struct {
 	Created     time.Time
 	LastUpdated time.Time
 	Tags        map[string]bool
-	Notebook    *Notebook
+	NotebookID  int64
 }
 
 //NewNote returns a new note pointer.
-func NewNote(title, memo string, notebook *Notebook, tags []string) *Note {
+func NewNote(title, memo string, notebookID int64, tags []string) *Note {
 	note := &Note{
 		Title:       title,
 		Memo:        memo,
 		Created:     time.Now(),
 		LastUpdated: time.Now(),
 		Tags:        make(map[string]bool),
-		Notebook:    notebook,
+		NotebookID:  notebookID,
 	}
 	note.AddTags(tags)
 	return note
@@ -57,8 +57,8 @@ func (note *Note) RemoveTags(tags []string) {
 
 //UpdateNotebook updates the notebook this note belongs to
 //(also updates the LastUpdate value)
-func (note *Note) UpdateNotebook(notebook *Notebook) {
-	note.Notebook = notebook
+func (note *Note) UpdateNotebook(notebookID int64) {
+	note.NotebookID = notebookID
 	noteUpdated(note)
 }
 

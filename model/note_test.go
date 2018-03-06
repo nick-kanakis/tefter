@@ -43,9 +43,9 @@ func TestRemoveTags(t *testing.T) {
 
 func TestUpdateNotebook(t *testing.T) {
 	note := createMockedNote()
-	note.UpdateNotebook(NewNotebook("testNotebook2"))
+	note.UpdateNotebook(123)
 
-	if note.Notebook.Title != "testNotebook2" {
+	if note.NotebookID != 123 {
 		t.Error("Failed updating notebook")
 	}
 }
@@ -63,5 +63,5 @@ func TestNoteUpdated(t *testing.T) {
 }
 
 func createMockedNote() *Note {
-	return NewNote("testTitle", "testMemo", NewNotebook("testnote"), []string{"tag1", "tag2"})
+	return NewNote("testTitle", "testMemo", 111, []string{"tag1", "tag2"})
 }
