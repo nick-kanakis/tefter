@@ -12,7 +12,7 @@ func connect2DB(dbPath string) *sqlx.DB {
 	defer func() {
 		if r := recover(); r != nil {
 			err = r.(error)
-			//todo: log error
+			//TODO: log error
 			tx.Rollback()
 			db = nil
 		}

@@ -1,10 +1,12 @@
 package repository
 
 import (
-	//todo: should be moved to main
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/tefter/model"
+	//FIXME: should be moved to main
+	_"github.com/mattn/go-sqlite3"
+	"github.com/nicolasmanic/tefter/model"
 )
+
+//FIXME: Is there a cleaner way to implement separation of conserns for Repository layer???
 
 //NoteRepository is an interface for handling DB related tasks for Note
 type NoteRepository interface {
