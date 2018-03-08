@@ -6,11 +6,11 @@ import (
 )
 
 func TestConnect2DB(t *testing.T) {
-	db := connect2DB("testPath")
+	db := connect2DB("test.db")
 
 	defer func() {
 		db.Close()
-		os.Remove("testPath")
+		os.Remove("test.db")
 	}()
 
 	if db == nil || db.Ping() != nil {

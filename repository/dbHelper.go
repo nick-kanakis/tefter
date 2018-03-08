@@ -42,9 +42,13 @@ func connect2DB(dbPath string) *sqlx.DB {
 	tx.MustExec(`CREATE VIRTUAL TABLE IF NOT EXISTS note_content USING fts4(title, memo)`)
 
 	err = tx.Commit()
+	checkError(err)
+	return db
+}
+
+func checkError(err error) {
 	if err != nil {
 		//todo logs
 		panic(err)
 	}
-	return db
 }

@@ -4,13 +4,13 @@ import "time"
 
 //Note is the note we want to keep.
 type Note struct {
-	ID          int64
-	Title       string
-	Memo        string
-	Created     time.Time
-	LastUpdated time.Time
+	ID          int64 `db:"id"`
+	Title       string `db:"title"`
+	Memo        string `db:"memo"`
+	Created     time.Time `db:"created"`
+	LastUpdated time.Time `db:"lastUpdated"`
 	Tags        map[string]bool
-	NotebookID  int64
+	NotebookID  int64 `db:"notebook_id"`
 }
 
 //NewNote returns a new note pointer.
