@@ -4,9 +4,9 @@ import "time"
 
 //Note is the note we want to keep.
 type Note struct {
-	ID          int64 `db:"id"`
-	Title       string `db:"title"`
-	Memo        string `db:"memo"`
+	ID          int64     `db:"id"`
+	Title       string    `db:"title"`
+	Memo        string    `db:"memo"`
 	Created     time.Time `db:"created"`
 	LastUpdated time.Time `db:"lastUpdated"`
 	Tags        map[string]bool

@@ -13,7 +13,7 @@ type NoteRepository interface {
 	SaveNote(note *model.Note) (int64, error)
 	GetNotes(noteIDs []int64) ([]*model.Note, error)
 	GetNote(noteID int64) (*model.Note, error)
-	UpdateNote(note *model.Note)  error
+	UpdateNote(note *model.Note) error
 	DeleteNotes(noteIDs []int64) error
 	SearchNotesByKeyword(keyword string) ([]*model.Note, error)
 	SearchNoteByTag(tags []string) ([]*model.Note, error)

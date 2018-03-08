@@ -97,7 +97,7 @@ func (noteRepo *sqliteNoteRepository) GetNotes(noteIDs []int64) (notes []*model.
 		tags := []string{}
 		err = noteRepo.Select(&tags, queryTag, note.ID)
 		checkError(err)
-		note.Tags = make (map[string]bool)
+		note.Tags = make(map[string]bool)
 		for _, tag := range tags {
 			note.Tags[tag] = true
 		}
@@ -109,10 +109,10 @@ func (noteRepo *sqliteNoteRepository) GetNotes(noteIDs []int64) (notes []*model.
 func (noteRepo *sqliteNoteRepository) GetNote(noteID int64) (note *model.Note, err error) {
 	notes, err := noteRepo.GetNotes([]int64{noteID})
 	checkError(err)
-	if len(notes) != 1{
+	if len(notes) != 1 {
 		return nil, fmt.Errorf("Could find note with id: %v", noteID)
 	}
-	return notes[0],err
+	return notes[0], err
 }
 
 func (noteRepo *sqliteNoteRepository) UpdateNote(note *model.Note) (err error) {
@@ -149,15 +149,15 @@ func (noteRepo *sqliteNoteRepository) UpdateNote(note *model.Note) (err error) {
 	insertNoteTagQuery := `INSERT INTO note_tag (note_id, tag) VALUES(?,?)`
 
 	tx.MustExec(updateNoteQuery,
-				note.Title,
-				note.Memo,
-				note.Created,
-				note.LastUpdated,
-				note.NotebookID,
-				note.ID  )
+		note.Title,
+		note.Memo,
+		note.Created,
+		note.LastUpdated,
+		note.NotebookID,
+		note.ID)
 
 	tx.MustExec(deleteNoteTagQuery, note.ID)
-	
+
 	for tag := range note.Tags {
 		sanitizedTag := strings.TrimSpace(tag)
 		sanitizedTag = strings.ToLower(sanitizedTag)
@@ -183,7 +183,6 @@ func (noteRepo *sqliteNoteRepository) SearchNoteByTag(tags []string) ([]*model.N
 	return nil, nil
 }
 
-
-func (noteRepo *sqliteNoteRepository) CloseDB() error{
+func (noteRepo *sqliteNoteRepository) CloseDB() error {
 	return noteRepo.Close()
 }
