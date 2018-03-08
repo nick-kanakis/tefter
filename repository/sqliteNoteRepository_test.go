@@ -53,11 +53,60 @@ func TestGetNotes(t *testing.T){
 		t.Error("Could not properly retrieve note from DB")
 	}
 
-	if notes[0].ID != id1 ||notes[1].ID != id2{
+	if  len(notes[0].Tags) != 2 || len(notes[1].Tags) != 2{
 		t.Error("Could not properly retrieve tags of note from DB")
 	}
 
-	if  len(notes[0].Tags) != 2 || len(notes[1].Tags) != 2{
+	if  notes[0].Created.IsZero() || notes[0].Created.IsZero(){
 		t.Error("Could not properly retrieve tags of note from DB")
+	}
+}
+
+func TestGetNote(t *testing.T){
+	testRepo := NewNoteRepository("test.db")	
+	//tear down test
+	defer func(){
+		testRepo.CloseDB()
+		os.Remove("test.db")
+	}()
+
+	mockNote := model.NewNote("testTitle", "test Memo", 1, []string{"testTag1", "testTag2"})
+	id, _:= testRepo.SaveNote(mockNote)
+
+	note, err:=testRepo.GetNote(id)
+	if err != nil{
+		t.Errorf("Could not retrieve note from DB, error msg: %v", err)
+	}
+
+	if note.ID != id {
+		t.Error("Could not properly retrieve note from DB")
+	}
+}
+
+func TestUpdateNote(t *testing.T){
+	testRepo := NewNoteRepository("test.db")	
+	//tear down test
+	defer func(){
+		testRepo.CloseDB()
+		os.Remove("test.db")
+	}()
+
+	mockNote := model.NewNote("testTitle", "test Memo", 1, []string{"testTag1", "testTag2"})
+	testRepo.SaveNote(mockNote)
+	mockNote.Memo = "Updated Memo"
+	delete(mockNote.Tags, "testTag1")
+	mockNote.Tags["testTag3"] = true
+
+	err := testRepo.UpdateNote(mockNote)
+	if err != nil{
+		t.Errorf("Could not update note, error msg: %v", err)
+	}
+
+	updatedNote, _ := testRepo.GetNotes([]int64{mockNote.ID})
+	if updatedNote[0].Memo != "Updated Memo"{
+		t.Error("Could not update note")
+	}
+	if len(updatedNote[0].Tags) != 2 || updatedNote[0].Tags["testTag3"]{
+		t.Error("Could not update note")
 	}
 }

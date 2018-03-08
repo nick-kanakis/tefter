@@ -77,7 +77,7 @@ func (noteRepo *sqliteNoteRepository) SaveNote(note *model.Note) (noteID int64, 
 	return noteID, err
 }
 
-func (noteRepo *sqliteNoteRepository) GetNotes(noteIDs []int64) ( notes []*model.Note, err error) {
+func (noteRepo *sqliteNoteRepository) GetNotes(noteIDs []int64) (notes []*model.Note, err error) {
 	selectNote := "SELECT id, title, memo, created, lastUpdated, notebook_id FROM note "
 	whereNote := "WHERE id IN ("
 	args := []interface{}{}
@@ -106,6 +106,71 @@ func (noteRepo *sqliteNoteRepository) GetNotes(noteIDs []int64) ( notes []*model
 	return notes, err
 }
 
+func (noteRepo *sqliteNoteRepository) GetNote(noteID int64) (note *model.Note, err error) {
+	notes, err := noteRepo.GetNotes([]int64{noteID})
+	checkError(err)
+	if len(notes) != 1{
+		return nil, fmt.Errorf("Could find note with id: %v", noteID)
+	}
+	return notes[0],err
+}
+
+func (noteRepo *sqliteNoteRepository) UpdateNote(note *model.Note) (err error) {
+	if note.Title == "" {
+		return fmt.Errorf("Note should contain title")
+	}
+	if note.Memo == "" {
+		return fmt.Errorf("Note should contain memo")
+	}
+	if note.Created.IsZero() {
+		note.Created = time.Now().UTC()
+	}
+	if note.LastUpdated.IsZero() {
+		note.LastUpdated = time.Now().UTC()
+	}
+
+	tx, err := noteRepo.Beginx()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			panicErr, _ := r.(error)
+			tx.Rollback()
+			err = panicErr
+		}
+	}()
+
+	updateNoteQuery := `UPDATE note SET
+		title = ?, memo = ?, created = ?, lastUpdated = ?, notebook_id =?  
+		WHERE id = ?`
+	deleteNoteTagQuery := `DELETE FROM note_tag WHERE note_id = ?`
+	insertNoteTagQuery := `INSERT INTO note_tag (note_id, tag) VALUES(?,?)`
+
+	tx.MustExec(updateNoteQuery,
+				note.Title,
+				note.Memo,
+				note.Created,
+				note.LastUpdated,
+				note.NotebookID,
+				note.ID  )
+
+	tx.MustExec(deleteNoteTagQuery, note.ID)
+	
+	for tag := range note.Tags {
+		sanitizedTag := strings.TrimSpace(tag)
+		sanitizedTag = strings.ToLower(sanitizedTag)
+		tx.MustExec(insertNoteTagQuery,
+			note.ID,
+			sanitizedTag)
+	}
+	err = tx.Commit()
+	checkError(err)
+
+	return err
+}
+
 func (noteRepo *sqliteNoteRepository) DeleteNotes(noteIDs []int64) error {
 	return nil
 }
@@ -118,9 +183,6 @@ func (noteRepo *sqliteNoteRepository) SearchNoteByTag(tags []string) ([]*model.N
 	return nil, nil
 }
 
-func (noteRepo *sqliteNoteRepository) UpdateNote(note *model.Note) (*model.Note, error) {
-	return nil, nil
-}
 
 func (noteRepo *sqliteNoteRepository) CloseDB() error{
 	return noteRepo.Close()
