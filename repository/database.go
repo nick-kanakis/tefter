@@ -15,8 +15,9 @@ type NoteRepository interface {
 	GetNote(noteID int64) (*model.Note, error)
 	UpdateNote(note *model.Note) error
 	DeleteNotes(noteIDs []int64) error
+	DeleteNote(noteIDs int64) error
 	SearchNotesByKeyword(keyword string) ([]*model.Note, error)
-	SearchNoteByTag(tags []string) ([]*model.Note, error)
+	SearchNotesByTag(tags []string) ([]*model.Note, error)
 	CloseDB() error
 }
 
