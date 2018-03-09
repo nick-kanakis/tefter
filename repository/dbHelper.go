@@ -52,3 +52,17 @@ func checkError(err error) {
 		panic(err)
 	}
 }
+
+func removeDups(integers []int64) []int64{
+	seen := make(map[int64]struct{}, len(integers))
+    j := 0
+    for _, v := range integers {
+        if _, ok := seen[v]; ok {
+            continue
+        }
+        seen[v] = struct{}{}
+        integers[j] = v
+        j++
+    }
+    return integers[:j]
+}
