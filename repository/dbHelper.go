@@ -32,14 +32,29 @@ func connect2DB(dbPath string) *sqlx.DB {
 		notebook_id INTEGER NOT NULL,
 		CONSTRAINT note_PK PRIMARY KEY(id),
 		CONSTRAINT notebook_id_FK FOREIGN KEY(notebook_id) REFERENCES notebook(id))`)
+	
+		tx.MustExec(`CREATE TABLE IF NOT EXISTS note_tag (
+		note_id INTEGER NOT NULL,
+		tag		TEXT NOT NULL,
+		CONSTRAINT note_tag_PK PRIMARY KEY(tag, note_id),
+		CONSTRAINT note_id_FK FOREIGN KEY(note_id) REFERENCES note(id))`)
 
-	tx.MustExec(`CREATE TABLE IF NOT EXISTS note_tag (
-			note_id INTEGER NOT NULL,
-			tag		TEXT NOT NULL,
-			CONSTRAINT note_tag_PK PRIMARY KEY(tag, note_id),
-			CONSTRAINT note_id_FK FOREIGN KEY(note_id) REFERENCES note(id))`)
+	tx.MustExec(`CREATE VIRTUAL TABLE IF NOT EXISTS note_content USING fts4(content="note", title, memo)`)
+	
+	tx.MustExec(`CREATE TRIGGER note_bu BEFORE UPDATE ON note BEGIN
+				 DELETE FROM note_content WHERE docid = old.rowid;
+				 END;`)
+	tx.MustExec(`CREATE TRIGGER note_bd BEFORE DELETE ON note BEGIN
+				DELETE FROM note_content WHERE docid = old.rowid;
+				END`)
 
-	tx.MustExec(`CREATE VIRTUAL TABLE IF NOT EXISTS note_content USING fts4(title, memo)`)
+	tx.MustExec(`CREATE TRIGGER note_au AFTER UPDATE ON note BEGIN
+				 INSERT INTO note_content(docid, title, memo) VALUES(new.rowid, new.title, new.memo);
+				 END;`)
+	tx.MustExec(`CREATE TRIGGER note_ad AFTER DELETE ON note BEGIN
+				INSERT INTO note_content(docid, title, memo) VALUES(new.rowid, new.title, new.memo);
+				END;`)
+
 
 	err = tx.Commit()
 	checkError(err)
