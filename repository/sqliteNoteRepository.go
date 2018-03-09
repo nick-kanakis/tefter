@@ -2,9 +2,7 @@ package repository
 
 import (
 	"fmt"
-	"strings"
 	"time"
-
 	"github.com/jmoiron/sqlx"
 	"github.com/nicolasmanic/tefter/model"
 )
@@ -62,13 +60,11 @@ func (noteRepo *sqliteNoteRepository) SaveNote(note *model.Note) (noteID int64, 
 	checkError(err)
 
 	for tag := range note.Tags {
-		sanitizedTag := strings.TrimSpace(tag)
-		sanitizedTag = strings.ToLower(sanitizedTag)
 		tx.MustExec(`INSERT INTO note_tag (
 			note_id, tag)
 			VALUES(?,?)`,
 			noteID,
-			sanitizedTag)
+			tag)
 	}
 
 	err = tx.Commit()
@@ -78,6 +74,10 @@ func (noteRepo *sqliteNoteRepository) SaveNote(note *model.Note) (noteID int64, 
 }
 
 func (noteRepo *sqliteNoteRepository) GetNotes(noteIDs []int64) (notes []*model.Note, err error) {
+	noteIDs = removeDups(noteIDs)
+	if len(noteIDs) == 0{
+		return []*model.Note{}, nil
+	}
 	selectNote := "SELECT id, title, memo, created, lastUpdated, notebook_id FROM note "
 	whereNote := "WHERE id IN ("
 	args := []interface{}{}
@@ -159,11 +159,9 @@ func (noteRepo *sqliteNoteRepository) UpdateNote(note *model.Note) (err error) {
 	tx.MustExec(deleteNoteTagQuery, note.ID)
 
 	for tag := range note.Tags {
-		sanitizedTag := strings.TrimSpace(tag)
-		sanitizedTag = strings.ToLower(sanitizedTag)
 		tx.MustExec(insertNoteTagQuery,
 			note.ID,
-			sanitizedTag)
+			tag)
 	}
 	err = tx.Commit()
 	checkError(err)
@@ -171,16 +169,74 @@ func (noteRepo *sqliteNoteRepository) UpdateNote(note *model.Note) (err error) {
 	return err
 }
 
-func (noteRepo *sqliteNoteRepository) DeleteNotes(noteIDs []int64) error {
-	return nil
+func (noteRepo *sqliteNoteRepository) DeleteNotes(noteIDs []int64) (err error) {
+	noteIDs = removeDups(noteIDs)
+	whereNotePart := " WHERE id IN ("
+	whereTagPart := " WHERE note_id IN ("
+	args := []interface{}{}
+	for _ , id := range noteIDs{
+		args = append(args, id)
+		whereNotePart += "?,"
+		whereTagPart += "?,"
+	}
+
+	whereNotePart = whereNotePart[:len(whereNotePart)-1]
+	whereNotePart = whereNotePart + ")"
+	whereTagPart = whereTagPart[:len(whereTagPart)-1]
+	whereTagPart = whereTagPart + ")"
+	
+	tx, err := noteRepo.Beginx()
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		if r := recover(); r != nil {
+			panicErr, _ := r.(error)
+			tx.Rollback()
+			err = panicErr
+		}
+	}()
+
+	deleteNoteQuery := "DELETE FROM note " + whereNotePart
+	deleteTagQuery := "DELETE FROM note_tag " + whereTagPart
+
+	tx.MustExec(deleteNoteQuery, args...)
+	tx.MustExec(deleteTagQuery, args...)
+	
+	err = tx.Commit()
+	checkError(err)
+	return err
+}
+
+func (noteRepo *sqliteNoteRepository) DeleteNote(noteID int64) (err error) {
+	return noteRepo.DeleteNotes([]int64{noteID})
 }
 
 func (noteRepo *sqliteNoteRepository) SearchNotesByKeyword(keyword string) ([]*model.Note, error) {
 	return nil, nil
 }
 
-func (noteRepo *sqliteNoteRepository) SearchNoteByTag(tags []string) ([]*model.Note, error) {
-	return nil, nil
+func (noteRepo *sqliteNoteRepository) SearchNotesByTag(tags []string) (notes []*model.Note, err error) {
+	selectNoteIDs := "SELECT note_id FROM note_tag "
+	whereNote := "WHERE tag IN ("
+	args := []interface{}{}
+
+	for _, tag := range tags {
+		whereNote = whereNote + "?,"
+		args = append(args, tag)
+	}
+
+	whereNote = whereNote[:len(whereNote)-1]
+	whereNote = whereNote + ")"
+
+	queryTag := selectNoteIDs + whereNote
+	ids:=[]int64{}
+	err = noteRepo.Select(&ids, queryTag, args...)
+	checkError(err)
+
+	notes, err = noteRepo.GetNotes(ids)
+	return notes, err
 }
 
 func (noteRepo *sqliteNoteRepository) CloseDB() error {
