@@ -240,7 +240,6 @@ func (noteRepo *sqliteNoteRepository) SearchNotesByTag(tags []string) (notes []*
 	whereNote = whereNote + ") ORDER BY n.created"
 
 	queryNote := selectNote + whereNote
-	fmt.Println(queryNote)
 	err = noteRepo.Select(&notes, queryNote, args...)
 	checkError(err)
 
