@@ -6,7 +6,6 @@ import (
 	"testing"
 )
 
-//TODO clean up DB or mock it
 func TestSaveNote(t *testing.T) {
 	testRepo := NewNoteRepository("test.db")
 	//tear down test

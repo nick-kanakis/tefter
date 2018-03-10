@@ -59,12 +59,11 @@ func (noteRepo *sqliteNoteRepository) SaveNote(note *model.Note) (noteID int64, 
 	note.ID = noteID
 	checkError(err)
 
+	tagInsertStmt, err:=tx.Preparex(`INSERT INTO note_tag (note_id, tag) VALUES(?,?)`)
+	checkError(err)
+
 	for tag := range note.Tags {
-		tx.MustExec(`INSERT INTO note_tag (
-			note_id, tag)
-			VALUES(?,?)`,
-			noteID,
-			tag)
+		tagInsertStmt.MustExec(noteID,tag)
 	}
 
 	err = tx.Commit()
@@ -92,10 +91,12 @@ func (noteRepo *sqliteNoteRepository) GetNotes(noteIDs []int64) (notes []*model.
 	err = noteRepo.Select(&notes, querynote, args...)
 	checkError(err)
 
-	queryTag := "SELECT tag FROM note_tag WHERE note_id = ?"
+	selectTagStmt, err:= noteRepo.Preparex("SELECT tag FROM note_tag WHERE note_id = ?")
+	checkError(err)
+
 	for _, note := range notes {
 		tags := []string{}
-		err = noteRepo.Select(&tags, queryTag, note.ID)
+		err = selectTagStmt.Select(&tags, note.ID)
 		checkError(err)
 		note.Tags = make(map[string]bool)
 		for _, tag := range tags {
@@ -146,7 +147,8 @@ func (noteRepo *sqliteNoteRepository) UpdateNote(note *model.Note) (err error) {
 		title = ?, memo = ?, created = ?, lastUpdated = ?, notebook_id =?  
 		WHERE id = ?`
 	deleteNoteTagQuery := `DELETE FROM note_tag WHERE note_id = ?`
-	insertNoteTagQuery := `INSERT INTO note_tag (note_id, tag) VALUES(?,?)`
+	insertNoteTagStmt,err := tx.Preparex(`INSERT INTO note_tag (note_id, tag) VALUES(?,?)`)
+	checkError(err)
 
 	tx.MustExec(updateNoteQuery,
 		note.Title,
@@ -159,10 +161,9 @@ func (noteRepo *sqliteNoteRepository) UpdateNote(note *model.Note) (err error) {
 	tx.MustExec(deleteNoteTagQuery, note.ID)
 
 	for tag := range note.Tags {
-		tx.MustExec(insertNoteTagQuery,
-			note.ID,
-			tag)
+		insertNoteTagStmt.MustExec(note.ID,	tag)
 	}
+
 	err = tx.Commit()
 	checkError(err)
 
