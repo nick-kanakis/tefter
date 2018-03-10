@@ -64,8 +64,7 @@ func (noteRepo *sqliteNoteRepository) SaveNote(note *model.Note) (noteID int64, 
 	note.ID = noteID
 
 	tx.MustExec(`INSERT INTO notebook_note (note_id, notebook_id)
-	VALUES (?, ?)`,
-		note.ID, note.NotebookID)
+	VALUES (?, ?)`, note.ID, note.NotebookID)
 
 	tagInsertStmt, err := tx.Preparex(`INSERT INTO note_tag (note_id, tag) VALUES(?,?)`)
 	checkError(err)
@@ -83,7 +82,7 @@ func (noteRepo *sqliteNoteRepository) SaveNote(note *model.Note) (noteID int64, 
 func (noteRepo *sqliteNoteRepository) GetNotes(noteIDs []int64) (notes []*model.Note, err error) {
 	noteIDs = removeDups(noteIDs)
 	if len(noteIDs) == 0 {
-		return nil, fmt.Errorf("Empty slice of ids to search for")
+		return []*model.Note{}, nil
 	}
 	selectNote := "SELECT id, title, memo, created, lastUpdated, notebook_id FROM note "
 	whereNote := "WHERE id IN ("
@@ -98,6 +97,7 @@ func (noteRepo *sqliteNoteRepository) GetNotes(noteIDs []int64) (notes []*model.
 	querynote := selectNote + whereNote
 	err = noteRepo.Select(&notes, querynote, args...)
 	checkError(err)
+
 
 	selectTagStmt, err := noteRepo.Preparex("SELECT tag FROM note_tag WHERE note_id = ?")
 	checkError(err)

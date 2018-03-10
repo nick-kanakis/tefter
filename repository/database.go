@@ -23,7 +23,7 @@ type NoteRepository interface {
 
 //NotebookRepository is an interface for handling DB related tasks for Notebook
 type NotebookRepository interface {
-	SaveNotebook(notebook model.Notebook) (int64, error)
+	SaveNotebook(notebook *model.Notebook) (int64, error)
 	GetNotebooks(notebooksIDs []int64) ([]*model.Notebook, error)
 	GetNotebook(notebooksID int64) (*model.Notebook, error)
 	UpdateNotebook(notebook *model.Notebook) error
