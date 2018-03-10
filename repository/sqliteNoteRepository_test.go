@@ -144,36 +144,6 @@ func TestDeleteNotes(t *testing.T) {
 	}
 }
 
-func TestSearchNoteByTag(t *testing.T) {
-	testRepo := NewNoteRepository("test.db")
-	//tear down test
-	defer func() {
-		testRepo.CloseDB()
-		os.Remove("test.db")
-	}()
-
-	mockNote1 := model.NewNote("testTitle", "test Memo", 1, []string{"testTag1", "testTag2"})
-	mockNote2 := model.NewNote("testTitle", "test Memo", 1, []string{"testTag3", "testTag4"})
-	mockNote3 := model.NewNote("testTitle", "test Memo", 1, []string{"testTag5"})
-
-	id1, _ := testRepo.SaveNote(mockNote1)
-	testRepo.SaveNote(mockNote2)
-	id3, _ := testRepo.SaveNote(mockNote3)
-
-	notes, err := testRepo.SearchNotesByTag([]string{"testTag1", "testTag5"})
-
-	if err != nil {
-		t.Errorf("Could not search notes by tag, err msg: %v", err)
-	}
-	if len(notes) != 2 {
-		t.Errorf("Could not search notes by tag")
-	}
-	if !((notes[0].ID != id1 || notes[0].ID != id3) && (notes[1].ID != id1 || notes[1].ID != id3)) {
-		t.Errorf("Could not search notes by tag")
-	}
-
-}
-
 func TestSearchNotesByKeyword(t *testing.T) {
 	testRepo := NewNoteRepository("test.db")
 	//tear down test
@@ -205,4 +175,34 @@ func TestSearchNotesByKeyword(t *testing.T) {
 	if len(subSetOfNotes) != 1 {
 		t.Error("Could not search notes by keyword")
 	}
+}
+
+func TestSearchNoteByTag(t *testing.T) {
+	testRepo := NewNoteRepository("test.db")
+	//tear down test
+	defer func() {
+		testRepo.CloseDB()
+		os.Remove("test.db")
+	}()
+
+	mockNote1 := model.NewNote("testTitle", "test Memo", 1, []string{"testTag1", "testTag2"})
+	mockNote2 := model.NewNote("testTitle", "test Memo", 1, []string{"testTag3", "testTag4"})
+	mockNote3 := model.NewNote("testTitle", "test Memo", 1, []string{"testTag5"})
+
+	id1, _ := testRepo.SaveNote(mockNote1)
+	testRepo.SaveNote(mockNote2)
+	id3, _ := testRepo.SaveNote(mockNote3)
+
+	notes, err := testRepo.SearchNotesByTag([]string{"testTag1", "testTag5"})
+
+	if err != nil {
+		t.Errorf("Could not search notes by tag, err msg: %v", err)
+	}
+	if len(notes) != 2 {
+		t.Errorf("Could not search notes by tag")
+	}
+	if !((notes[0].ID != id1 || notes[0].ID != id3) && (notes[1].ID != id1 || notes[1].ID != id3)) {
+		t.Errorf("Could not search notes by tag")
+	}
+
 }

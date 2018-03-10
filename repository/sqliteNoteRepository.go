@@ -217,19 +217,18 @@ func (noteRepo *sqliteNoteRepository) SearchNotesByKeyword(keyword string) (note
 	if keyword == "" {
 		return nil, fmt.Errorf("Empty search parameter")
 	}
-	query := `SELECT docid FROM note_fts WHERE note_fts MATCH ?`
+	query := `SELECT n.id, n.title, n.memo, n.created, n.lastUpdated, n.notebook_id FROM note n 
+			  INNER JOIN note_fts nfs ON n.id = nfs.docid WHERE note_fts MATCH ?`
 
-	ids := []int64{}
-	err = noteRepo.Select(&ids, query, []interface{}{keyword}...)
-	checkError(err)
-	notes, err = noteRepo.GetNotes(ids)
+	err = noteRepo.Select(&notes, query, []interface{}{keyword}...)
 	checkError(err)
 	return notes, err
 }
 
 func (noteRepo *sqliteNoteRepository) SearchNotesByTag(tags []string) (notes []*model.Note, err error) {
-	selectNoteIDs := "SELECT note_id FROM note_tag "
-	whereNote := "WHERE tag IN ("
+	selectNote := `SELECT id, title, memo, created, lastUpdated, notebook_id FROM note n 
+				   INNER JOIN note_tag nt ON n.id = nt.note_id `
+	whereNote := "WHERE nt.tag IN ("
 	args := []interface{}{}
 
 	for _, tag := range tags {
@@ -238,14 +237,13 @@ func (noteRepo *sqliteNoteRepository) SearchNotesByTag(tags []string) (notes []*
 	}
 
 	whereNote = whereNote[:len(whereNote)-1]
-	whereNote = whereNote + ")"
+	whereNote = whereNote + ") ORDER BY n.created"
 
-	queryTag := selectNoteIDs + whereNote
-	ids := []int64{}
-	err = noteRepo.Select(&ids, queryTag, args...)
+	queryNote := selectNote + whereNote
+	fmt.Println(queryNote)
+	err = noteRepo.Select(&notes, queryNote, args...)
 	checkError(err)
 
-	notes, err = noteRepo.GetNotes(ids)
 	return notes, err
 }
 
