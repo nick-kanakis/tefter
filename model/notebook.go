@@ -2,8 +2,8 @@ package model
 
 //Notebook holds a list of "similar" notes
 type Notebook struct {
-	ID    int64
-	Title string
+	ID    int64 `db:"id"`
+	Title string `db:"title"`
 	Notes map[int64]*Note
 }
 
