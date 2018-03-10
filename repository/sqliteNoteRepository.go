@@ -76,7 +76,7 @@ func (noteRepo *sqliteNoteRepository) SaveNote(note *model.Note) (noteID int64, 
 func (noteRepo *sqliteNoteRepository) GetNotes(noteIDs []int64) (notes []*model.Note, err error) {
 	noteIDs = removeDups(noteIDs)
 	if len(noteIDs) == 0{
-		return []*model.Note{}, nil
+		return nil , fmt.Errorf("Empty slice of ids to search for")
 	}
 	selectNote := "SELECT id, title, memo, created, lastUpdated, notebook_id FROM note "
 	whereNote := "WHERE id IN ("
@@ -213,8 +213,18 @@ func (noteRepo *sqliteNoteRepository) DeleteNote(noteID int64) (err error) {
 	return noteRepo.DeleteNotes([]int64{noteID})
 }
 
-func (noteRepo *sqliteNoteRepository) SearchNotesByKeyword(keyword string) ([]*model.Note, error) {
-	return nil, nil
+func (noteRepo *sqliteNoteRepository) SearchNotesByKeyword(keyword string) (notes []*model.Note, err error) {
+	if keyword == ""{
+		return nil, fmt.Errorf("Empty search parameter")
+	}
+	query := `SELECT docid FROM note_fts WHERE note_fts MATCH ?`
+
+	ids:=[]int64{}
+	err = noteRepo.Select(&ids, query, []interface{}{keyword}...)
+	checkError(err)
+	notes, err = noteRepo.GetNotes(ids)
+	checkError(err)
+	return notes, err
 }
 
 func (noteRepo *sqliteNoteRepository) SearchNotesByTag(tags []string) (notes []*model.Note, err error) {
