@@ -41,7 +41,7 @@ func (notebookRepo *sqliteNotebookRepository) SaveNotebook(notebook *model.Noteb
 	notebookID, err = result.LastInsertId()
 	checkError(err)
 	notebook.ID = notebookID
-	
+
 	err = tx.Commit()
 	checkError(err)
 	return notebookID, err
@@ -52,7 +52,7 @@ func (notebookRepo *sqliteNotebookRepository) GetNotebooks(notebooksIDs []int64)
 	if len(notebooksIDs) == 0 {
 		return []*model.Notebook{}, nil
 	}
-	
+
 	selectNotebook := "SELECT id, title FROM notebook "
 	whereIdIn := "WHERE id IN ("
 	args := []interface{}{}
@@ -67,13 +67,13 @@ func (notebookRepo *sqliteNotebookRepository) GetNotebooks(notebooksIDs []int64)
 
 	err = notebookRepo.Select(&notebooks, querynotebook, args...)
 	checkError(err)
-	
+
 	noteRepo := NewNoteRepository(notebookRepo.dbPath)
 	defer noteRepo.CloseDB()
 
-	for _, notebook := range notebooks{
+	for _, notebook := range notebooks {
 		noteIDs := notebookRepo.getNoteIDs(notebook.ID)
-		notes, err:= noteRepo.GetNotes(noteIDs)
+		notes, err := noteRepo.GetNotes(noteIDs)
 		checkError(err)
 		notebook.Notes = make(map[int64]*model.Note)
 		for _, note := range notes {
@@ -96,14 +96,14 @@ func (notebookRepo *sqliteNotebookRepository) GetNotebook(notebookID int64) (*mo
 
 func (notebookRepo *sqliteNotebookRepository) UpdateNotebook(notebook *model.Notebook) (err error) {
 	if notebook.Title == "" {
-		return  fmt.Errorf("Notebook should contain title")
+		return fmt.Errorf("Notebook should contain title")
 	}
 
 	tx, err := notebookRepo.Beginx()
 	if err != nil {
 		return err
 	}
-	
+
 	defer func() {
 		if r := recover(); r != nil {
 			panicErr, _ := r.(error)
@@ -111,7 +111,7 @@ func (notebookRepo *sqliteNotebookRepository) UpdateNotebook(notebook *model.Not
 			err = panicErr
 		}
 	}()
-		
+
 	updateNotebookQuery := `UPDATE notebook SET	title = ? WHERE id = ?`
 	tx.MustExec(updateNotebookQuery, notebook.Title, notebook.ID)
 
@@ -125,7 +125,7 @@ func (notebookRepo *sqliteNotebookRepository) DeleteNotebooks(notebooksIDs []int
 	if len(notebooksIDs) == 0 {
 		return nil
 	}
-	
+
 	whereIdIn := "WHERE id IN ("
 	args := []interface{}{}
 
@@ -156,13 +156,13 @@ func (notebookRepo *sqliteNotebookRepository) DeleteNotebooks(notebooksIDs []int
 
 	noteRepo := NewNoteRepository(notebookRepo.dbPath)
 	defer noteRepo.CloseDB()
-	for _, notebookID := range notebooksIDs{
+	for _, notebookID := range notebooksIDs {
 		noteIDs := notebookRepo.getNoteIDs(notebookID)
-		err:= noteRepo.DeleteNotes(noteIDs)
-		checkError(err)	
+		err := noteRepo.DeleteNotes(noteIDs)
+		checkError(err)
 	}
 
-	return  err
+	return err
 }
 
 func (notebookRepo *sqliteNotebookRepository) DeleteNotebook(notebookID int64) error {
@@ -173,9 +173,9 @@ func (notebookRepo *sqliteNotebookRepository) CloseDB() error {
 	return notebookRepo.Close()
 }
 
-func (notebookRepo *sqliteNotebookRepository) getNoteIDs(notebookID int64) []int64{
-	query:="SELECT note_id FROM notebook_note WHERE notebook_id = ?"
-	noteIDs:=[]int64{}
+func (notebookRepo *sqliteNotebookRepository) getNoteIDs(notebookID int64) []int64 {
+	query := "SELECT note_id FROM notebook_note WHERE notebook_id = ?"
+	noteIDs := []int64{}
 	err := notebookRepo.Select(&noteIDs, query, []interface{}{notebookID}...)
 	checkError(err)
 	return noteIDs

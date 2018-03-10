@@ -22,7 +22,7 @@ func connect2DB(dbPath string) *sqlx.DB {
 		id INTEGER NOT NULL,
 		title TEXT NOT NULL,
 		CONSTRAINT notebook_PK PRIMARY KEY(id))`)
-	
+
 	//Default Notebook has id = 1
 	tx.MustExec(`INSERT OR IGNORE INTO notebook (id, title)
 				 VALUES (1, 'Default Notebook')`)
@@ -36,14 +36,14 @@ func connect2DB(dbPath string) *sqlx.DB {
 		notebook_id INTEGER NOT NULL,
 		CONSTRAINT note_PK PRIMARY KEY(id),
 		CONSTRAINT notebook_id_FK FOREIGN KEY(notebook_id) REFERENCES notebook(id))`)
-	
+
 	tx.MustExec(`CREATE TABLE IF NOT EXISTS notebook_note (
 		note_id INTEGER NOT NULL,
 		notebook_id		INTEGER NOT NULL,
 		CONSTRAINT notebook_note_PK PRIMARY KEY(note_id, notebook_id),
 		CONSTRAINT note_id_FK FOREIGN KEY(note_id) REFERENCES note(id),
 		CONSTRAINT notebook_id_FK FOREIGN KEY(notebook_id) REFERENCES notebook(id))`)
-	
+
 	tx.MustExec(`CREATE TABLE IF NOT EXISTS note_tag (
 		note_id INTEGER NOT NULL,
 		tag		TEXT NOT NULL,

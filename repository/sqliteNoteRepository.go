@@ -98,7 +98,6 @@ func (noteRepo *sqliteNoteRepository) GetNotes(noteIDs []int64) (notes []*model.
 	err = noteRepo.Select(&notes, querynote, args...)
 	checkError(err)
 
-
 	selectTagStmt, err := noteRepo.Preparex("SELECT tag FROM note_tag WHERE note_id = ?")
 	checkError(err)
 
