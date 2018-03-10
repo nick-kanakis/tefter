@@ -52,17 +52,17 @@ func connect2DB(dbPath string) *sqlx.DB {
 
 	tx.MustExec(`CREATE VIRTUAL TABLE IF NOT EXISTS note_fts USING fts4(content='note', title, memo)`)
 
-	tx.MustExec(`CREATE TRIGGER note_bu BEFORE UPDATE ON note BEGIN
+	tx.MustExec(`CREATE TRIGGER IF NOT EXISTS note_bu BEFORE UPDATE ON note BEGIN
 				 DELETE FROM note_fts WHERE docid = old.rowid;
 				 END;`)
-	tx.MustExec(`CREATE TRIGGER note_bd BEFORE DELETE ON note BEGIN
+	tx.MustExec(`CREATE TRIGGER IF NOT EXISTS note_bd BEFORE DELETE ON note BEGIN
 				DELETE FROM note_fts WHERE docid = old.rowid;
 				END;`)
 
-	tx.MustExec(`CREATE TRIGGER note_au AFTER UPDATE ON note BEGIN
+	tx.MustExec(`CREATE TRIGGER IF NOT EXISTS note_au AFTER UPDATE ON note BEGIN
 				 INSERT INTO note_fts(docid, title, memo) VALUES(new.rowid, new.title, new.memo);
 				 END;`)
-	tx.MustExec(`CREATE TRIGGER note_ai AFTER INSERT ON note BEGIN
+	tx.MustExec(`CREATE TRIGGER IF NOT EXISTS note_ai AFTER INSERT ON note BEGIN
 				INSERT INTO note_fts(docid, title, memo) VALUES(new.rowid, new.title, new.memo);
 				END;`)
 

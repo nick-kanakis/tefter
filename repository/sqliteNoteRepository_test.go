@@ -1,9 +1,9 @@
 package repository
 
 import (
-	"github.com/nicolasmanic/tefter/model"
 	"os"
 	"testing"
+	"github.com/nicolasmanic/tefter/model"
 )
 
 func TestSaveNote(t *testing.T) {
