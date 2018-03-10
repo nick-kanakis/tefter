@@ -39,20 +39,20 @@ func connect2DB(dbPath string) *sqlx.DB {
 		CONSTRAINT note_tag_PK PRIMARY KEY(tag, note_id),
 		CONSTRAINT note_id_FK FOREIGN KEY(note_id) REFERENCES note(id))`)
 
-	tx.MustExec(`CREATE VIRTUAL TABLE IF NOT EXISTS note_content USING fts4(content="note", title, memo)`)
+	tx.MustExec(`CREATE VIRTUAL TABLE IF NOT EXISTS note_fts USING fts4(content='note', title, memo)`)
 	
 	tx.MustExec(`CREATE TRIGGER note_bu BEFORE UPDATE ON note BEGIN
-				 DELETE FROM note_content WHERE docid = old.rowid;
+				 DELETE FROM note_fts WHERE docid = old.rowid;
 				 END;`)
 	tx.MustExec(`CREATE TRIGGER note_bd BEFORE DELETE ON note BEGIN
-				DELETE FROM note_content WHERE docid = old.rowid;
-				END`)
+				DELETE FROM note_fts WHERE docid = old.rowid;
+				END;`)
 
 	tx.MustExec(`CREATE TRIGGER note_au AFTER UPDATE ON note BEGIN
-				 INSERT INTO note_content(docid, title, memo) VALUES(new.rowid, new.title, new.memo);
+				 INSERT INTO note_fts(docid, title, memo) VALUES(new.rowid, new.title, new.memo);
 				 END;`)
-	tx.MustExec(`CREATE TRIGGER note_ad AFTER DELETE ON note BEGIN
-				INSERT INTO note_content(docid, title, memo) VALUES(new.rowid, new.title, new.memo);
+	tx.MustExec(`CREATE TRIGGER note_ai AFTER INSERT ON note BEGIN
+				INSERT INTO note_fts(docid, title, memo) VALUES(new.rowid, new.title, new.memo);
 				END;`)
 
 
