@@ -32,15 +32,15 @@ func connect2DB(dbPath string) *sqlx.DB {
 		notebook_id INTEGER NOT NULL,
 		CONSTRAINT note_PK PRIMARY KEY(id),
 		CONSTRAINT notebook_id_FK FOREIGN KEY(notebook_id) REFERENCES notebook(id))`)
-	
-		tx.MustExec(`CREATE TABLE IF NOT EXISTS note_tag (
+
+	tx.MustExec(`CREATE TABLE IF NOT EXISTS note_tag (
 		note_id INTEGER NOT NULL,
 		tag		TEXT NOT NULL,
 		CONSTRAINT note_tag_PK PRIMARY KEY(tag, note_id),
 		CONSTRAINT note_id_FK FOREIGN KEY(note_id) REFERENCES note(id))`)
 
 	tx.MustExec(`CREATE VIRTUAL TABLE IF NOT EXISTS note_fts USING fts4(content='note', title, memo)`)
-	
+
 	tx.MustExec(`CREATE TRIGGER note_bu BEFORE UPDATE ON note BEGIN
 				 DELETE FROM note_fts WHERE docid = old.rowid;
 				 END;`)
@@ -55,7 +55,6 @@ func connect2DB(dbPath string) *sqlx.DB {
 				INSERT INTO note_fts(docid, title, memo) VALUES(new.rowid, new.title, new.memo);
 				END;`)
 
-
 	err = tx.Commit()
 	checkError(err)
 	return db
@@ -68,16 +67,16 @@ func checkError(err error) {
 	}
 }
 
-func removeDups(integers []int64) []int64{
+func removeDups(integers []int64) []int64 {
 	seen := make(map[int64]struct{}, len(integers))
-    j := 0
-    for _, v := range integers {
-        if _, ok := seen[v]; ok {
-            continue
-        }
-        seen[v] = struct{}{}
-        integers[j] = v
-        j++
-    }
-    return integers[:j]
+	j := 0
+	for _, v := range integers {
+		if _, ok := seen[v]; ok {
+			continue
+		}
+		seen[v] = struct{}{}
+		integers[j] = v
+		j++
+	}
+	return integers[:j]
 }

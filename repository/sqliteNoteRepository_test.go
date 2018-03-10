@@ -129,17 +129,17 @@ func TestDeleteNotes(t *testing.T) {
 	id3, _ := testRepo.SaveNote(mockNote3)
 
 	err := testRepo.DeleteNotes([]int64{id1, id2})
-	if err != nil{
+	if err != nil {
 		t.Errorf("Could not delete notes, error msg: %v", err)
 	}
 
 	err = testRepo.DeleteNote(id3)
-	if err != nil{
+	if err != nil {
 		t.Errorf("Could not delete notes, error msg: %v", err)
 	}
 
-	notes, _ :=testRepo.GetNotes([]int64{id1, id2, id3})
-	if len(notes) != 0{
+	notes, _ := testRepo.GetNotes([]int64{id1, id2, id3})
+	if len(notes) != 0 {
 		t.Errorf("Could not delete notes")
 	}
 }
@@ -160,18 +160,18 @@ func TestSearchNoteByTag(t *testing.T) {
 	testRepo.SaveNote(mockNote2)
 	id3, _ := testRepo.SaveNote(mockNote3)
 
-	notes, err := testRepo.SearchNotesByTag([]string{"testTag1","testTag5"})
+	notes, err := testRepo.SearchNotesByTag([]string{"testTag1", "testTag5"})
 
-	if err != nil{
+	if err != nil {
 		t.Errorf("Could not search notes by tag, err msg: %v", err)
 	}
-	if len(notes) != 2{
+	if len(notes) != 2 {
 		t.Errorf("Could not search notes by tag")
 	}
-	if !((notes[0].ID != id1 || notes[0].ID != id3) &&(notes[1].ID != id1 || notes[1].ID != id3)){
+	if !((notes[0].ID != id1 || notes[0].ID != id3) && (notes[1].ID != id1 || notes[1].ID != id3)) {
 		t.Errorf("Could not search notes by tag")
 	}
-	
+
 }
 
 func TestSearchNotesByKeyword(t *testing.T) {
@@ -190,19 +190,19 @@ func TestSearchNotesByKeyword(t *testing.T) {
 	testRepo.SaveNote(mockNote2)
 	testRepo.SaveNote(mockNote3)
 
-	allNotes, err:= testRepo.SearchNotesByKeyword("Memo")
-	if err != nil{
+	allNotes, err := testRepo.SearchNotesByKeyword("Memo")
+	if err != nil {
 		t.Errorf("Could not search notes by keyword, err msg: %v", err)
 	}
-	if len(allNotes) != 3{
+	if len(allNotes) != 3 {
 		t.Error("Could not search notes by keyword")
 	}
 
-	subSetOfNotes, err:= testRepo.SearchNotesByKeyword("title1")
-	if err != nil{
+	subSetOfNotes, err := testRepo.SearchNotesByKeyword("title1")
+	if err != nil {
 		t.Errorf("Could not search notes by keyword, err msg: %v", err)
 	}
-	if len(subSetOfNotes) != 1{
+	if len(subSetOfNotes) != 1 {
 		t.Error("Could not search notes by keyword")
 	}
 }
