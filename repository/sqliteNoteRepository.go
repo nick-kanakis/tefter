@@ -186,19 +186,19 @@ func (noteRepo *sqliteNoteRepository) UpdateNote(note *model.Note) (err error) {
 
 func (noteRepo *sqliteNoteRepository) DeleteNotes(noteIDs []int64) (err error) {
 	noteIDs = removeDups(noteIDs)
-	whereIdIn := " WHERE id IN ("
-	whereNoteIdIn := " WHERE note_id IN ("
+	whereIDIn := " WHERE id IN ("
+	whereNoteIDIn := " WHERE note_id IN ("
 	args := []interface{}{}
 	for _, id := range noteIDs {
 		args = append(args, id)
-		whereIdIn += "?,"
-		whereNoteIdIn += "?,"
+		whereIDIn += "?,"
+		whereNoteIDIn += "?,"
 	}
 
-	whereIdIn = whereIdIn[:len(whereIdIn)-1]
-	whereIdIn = whereIdIn + ")"
-	whereNoteIdIn = whereNoteIdIn[:len(whereNoteIdIn)-1]
-	whereNoteIdIn = whereNoteIdIn + ")"
+	whereIDIn = whereIDIn[:len(whereIDIn)-1]
+	whereIDIn = whereIDIn + ")"
+	whereNoteIDIn = whereNoteIDIn[:len(whereNoteIDIn)-1]
+	whereNoteIDIn = whereNoteIDIn + ")"
 
 	tx, err := noteRepo.Beginx()
 	if err != nil {
@@ -213,9 +213,9 @@ func (noteRepo *sqliteNoteRepository) DeleteNotes(noteIDs []int64) (err error) {
 		}
 	}()
 
-	deleteNoteQuery := "DELETE FROM note " + whereIdIn
-	deleteTagQuery := "DELETE FROM note_tag " + whereNoteIdIn
-	deleteNoteNotebookQuery := "DELETE FROM notebook_note " + whereNoteIdIn
+	deleteNoteQuery := "DELETE FROM note " + whereIDIn
+	deleteTagQuery := "DELETE FROM note_tag " + whereNoteIDIn
+	deleteNoteNotebookQuery := "DELETE FROM notebook_note " + whereNoteIDIn
 
 	tx.MustExec(deleteNoteQuery, args...)
 	tx.MustExec(deleteTagQuery, args...)

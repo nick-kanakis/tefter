@@ -36,8 +36,7 @@ func (notebookRepo *sqliteNotebookRepository) SaveNotebook(notebook *model.Noteb
 		}
 	}()
 
-	result := tx.MustExec(`INSERT INTO notebook (title)	VALUES(?)`,
-		notebook.Title)
+	result := tx.MustExec(`INSERT INTO notebook (title)	VALUES(?)`, notebook.Title)
 	notebookID, err = result.LastInsertId()
 	checkError(err)
 	notebook.ID = notebookID
@@ -54,20 +53,21 @@ func (notebookRepo *sqliteNotebookRepository) GetNotebooks(notebooksIDs []int64)
 	}
 
 	selectNotebook := "SELECT id, title FROM notebook "
-	whereIdIn := "WHERE id IN ("
-	args := []interface{}{}
+	whereIDIn := "WHERE id IN ("
 
+	args := []interface{}{}
 	for _, id := range notebooksIDs {
-		whereIdIn = whereIdIn + "?,"
+		whereIDIn = whereIDIn + "?,"
 		args = append(args, id)
 	}
-	whereIdIn = whereIdIn[:len(whereIdIn)-1]
-	whereIdIn = whereIdIn + ")"
-	querynotebook := selectNotebook + whereIdIn
+	whereIDIn = whereIDIn[:len(whereIDIn)-1]
+	whereIDIn = whereIDIn + ")"
+	querynotebook := selectNotebook + whereIDIn
 
 	err = notebookRepo.Select(&notebooks, querynotebook, args...)
 	checkError(err)
 
+	//Use note repository to get the all notes of this notebook.
 	noteRepo := NewNoteRepository(notebookRepo.dbPath)
 	defer noteRepo.CloseDB()
 
@@ -80,7 +80,6 @@ func (notebookRepo *sqliteNotebookRepository) GetNotebooks(notebooksIDs []int64)
 			notebook.Notes[note.ID] = note
 		}
 	}
-
 	return notebooks, err
 }
 
@@ -114,9 +113,9 @@ func (notebookRepo *sqliteNotebookRepository) UpdateNotebook(notebook *model.Not
 
 	updateNotebookQuery := `UPDATE notebook SET	title = ? WHERE id = ?`
 	tx.MustExec(updateNotebookQuery, notebook.Title, notebook.ID)
-
 	err = tx.Commit()
 	checkError(err)
+
 	return err
 }
 
@@ -126,16 +125,16 @@ func (notebookRepo *sqliteNotebookRepository) DeleteNotebooks(notebooksIDs []int
 		return nil
 	}
 
-	whereIdIn := "WHERE id IN ("
-	args := []interface{}{}
+	whereIDIn := "WHERE id IN ("
 
+	args := []interface{}{}
 	for _, id := range notebooksIDs {
-		whereIdIn = whereIdIn + "?,"
+		whereIDIn = whereIDIn + "?,"
 		args = append(args, id)
 	}
-	whereIdIn = whereIdIn[:len(whereIdIn)-1]
-	whereIdIn = whereIdIn + ")"
-	deleteNotebook := "DELETE FROM notebook " + whereIdIn
+	whereIDIn = whereIDIn[:len(whereIDIn)-1]
+	whereIDIn = whereIDIn + ")"
+	deleteNotebook := "DELETE FROM notebook " + whereIDIn
 
 	tx, err := notebookRepo.Beginx()
 	if err != nil {
@@ -154,6 +153,7 @@ func (notebookRepo *sqliteNotebookRepository) DeleteNotebooks(notebooksIDs []int
 	err = tx.Commit()
 	checkError(err)
 
+	//use note repository to delete all notes of deleted notebooks.
 	noteRepo := NewNoteRepository(notebookRepo.dbPath)
 	defer noteRepo.CloseDB()
 	for _, notebookID := range notebooksIDs {
