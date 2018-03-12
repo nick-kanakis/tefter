@@ -1,7 +1,6 @@
 package repository
 
 import (
-	//FIXME: should be moved to main
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/nicolasmanic/tefter/model"
 )
