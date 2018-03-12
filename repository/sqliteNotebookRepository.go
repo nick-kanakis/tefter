@@ -93,18 +93,18 @@ func (notebookRepo *sqliteNotebookRepository) GetNotebook(notebookID int64) (*mo
 	return notebooks[0], err
 }
 
-func (notebookRepo *sqliteNotebookRepository) GetNotebookByTitle(notebooksTitle string) (notebook *model.Notebook, err error){
+func (notebookRepo *sqliteNotebookRepository) GetNotebookByTitle(notebooksTitle string) (notebook *model.Notebook, err error) {
 
-	query:= "SELECT id, title FROM notebook WHERE title = ? "
+	query := "SELECT id, title FROM notebook WHERE title = ? "
 	var notebooks []*model.Notebook
 	err = notebookRepo.Select(&notebooks, query, []interface{}{notebooksTitle}...)
-	
-	if len(notebooks)>1{
+
+	if len(notebooks) > 1 {
 		return nil, fmt.Errorf("Found more than one notebooks with the same title")
 	}
 
 	checkError(err)
-	if len(notebooks)>0 {
+	if len(notebooks) > 0 {
 		return notebooks[0], err
 	}
 

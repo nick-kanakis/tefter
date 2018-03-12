@@ -83,8 +83,8 @@ func TestGetNotebookByTitle(t *testing.T) {
 	if err != nil {
 		t.Errorf("Could not retrieve notebook by title from DB, error msg: %v", err)
 	}
-	
-	if notebook.Title !="notebook 2"{
+
+	if notebook.Title != "notebook 2" {
 		t.Error("Could not retrieve notebook by title from DB")
 	}
 }
