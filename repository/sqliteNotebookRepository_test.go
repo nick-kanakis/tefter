@@ -65,6 +65,30 @@ func TestGetNotebooks(t *testing.T) {
 
 }
 
+func TestGetNotebookByTitle(t *testing.T) {
+	testRepo := NewNotebookRepository("test.db")
+	//tear down test
+	defer func() {
+		testRepo.CloseDB()
+		os.Remove("test.db")
+	}()
+
+	mockNotebook2 := model.NewNotebook("notebook 2")
+	mockNotebook3 := model.NewNotebook("notebook 3")
+	testRepo.SaveNotebook(mockNotebook2)
+	testRepo.SaveNotebook(mockNotebook3)
+
+	notebook, err := testRepo.GetNotebookByTitle("notebook 2")
+
+	if err != nil {
+		t.Errorf("Could not retrieve notebook by title from DB, error msg: %v", err)
+	}
+	
+	if notebook.Title !="notebook 2"{
+		t.Error("Could not retrieve notebook by title from DB")
+	}
+}
+
 func TestUpdateNotebook(t *testing.T) {
 	testRepo := NewNotebookRepository("test.db")
 	//tear down test

@@ -21,6 +21,7 @@ func connect2DB(dbPath string) *sqlx.DB {
 	tx.MustExec(`CREATE TABLE IF NOT EXISTS notebook (
 		id INTEGER NOT NULL,
 		title TEXT NOT NULL,
+		CONSTRAINT title_UN UNIQUE(title),
 		CONSTRAINT notebook_PK PRIMARY KEY(id))`)
 
 	//Default Notebook has id = 1
