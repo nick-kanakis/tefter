@@ -41,6 +41,14 @@ func TestRemoveTags(t *testing.T) {
 	}
 }
 
+func TestUpdateTags(t *testing.T) {
+	note := createMockedNote()
+	note.UpdateTags([]string{"tag3"})
+
+	if !note.Tags["tag3"] {
+		t.Error("Failed updating tags")
+	}
+}
 func TestUpdateNotebook(t *testing.T) {
 	note := createMockedNote()
 	note.UpdateNotebook(123)

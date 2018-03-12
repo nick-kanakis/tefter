@@ -55,6 +55,13 @@ func (note *Note) RemoveTags(tags []string) {
 	noteUpdated(note)
 }
 
+//UpdateTags updates tags (also updates the LastUpdate value)
+func (note *Note) UpdateTags(tags []string) {
+	note.Tags = make(map[string]bool)
+	note.AddTags(tags)
+	noteUpdated(note)
+}
+
 //UpdateNotebook updates the notebook this note belongs to
 //(also updates the LastUpdate value)
 func (note *Note) UpdateNotebook(notebookID int64) {
