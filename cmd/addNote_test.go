@@ -72,7 +72,9 @@ func (mockNotebookRepoNotebookExist) GetNotebook(notebooksID int64) (*model.Note
 }
 
 func (mockNotebookRepoNotebookExist) GetNotebookByTitle(notebooksTitle string) (*model.Notebook, error) {
-	return &model.Notebook{2, "existing Notebook", make(map[int64]*model.Note)}, nil
+		notebook:=model.NewNotebook("existing Notebook")
+		notebook.ID = 2
+	return notebook, nil
 }
 
 func (mockNotebookRepoNotebookExist) UpdateNotebook(notebook *model.Notebook) error {
