@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/spf13/cobra"
-	"io/ioutil"
-	"os"
-	"os/exec"
 )
 
 const DEFAULT_NOTEBOOK_ID = 1
@@ -16,7 +13,7 @@ var addNoteCmd = &cobra.Command{
 	Short:   "Create a new note",
 	Example: "addNote -t title_1 -a tag1,tag2 -n notebook_1",
 	Run: func(cmd *cobra.Command, args []string) {
-		memo, err := openEditor()
+		memo, err := openEditor("")
 		if err != nil {
 			//TODO handle the error
 			fmt.Printf("error msg: %v", err)
@@ -49,40 +46,6 @@ func init() {
 	addNoteCmd.Flags().StringP("notebook", "n", "", "Notebook that this note belongs to")
 }
 
-func openEditor() (string, error) {
-	vi := "vim"
-	fpath := os.TempDir() + "/tmpMemo.txt"
-	f, err := os.Create(fpath)
-	if err != nil {
-		return "", err
-	}
-	f.Close()
-	defer os.Remove(fpath)
-	path, err := exec.LookPath(vi)
-	if err != nil {
-		return "", err
-	}
-
-	cmd := exec.Command(path, fpath)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	err = cmd.Start()
-	if err != nil {
-		return "", err
-	}
-	err = cmd.Wait()
-	if err != nil {
-		return "", err
-	}
-
-	memo, err := ioutil.ReadFile(fpath)
-	if err != nil {
-		return "", err
-	}
-
-	return string(memo), nil
-}
-
 //If notebookTitle exists it will be inserted there.
 //If notebookTitle is empty it will be inserted to the default notebook.
 //If notebookTitle does not exists notebook will be created and note will be there.
@@ -103,9 +66,9 @@ func addNotebookToNote(note *model.Note, notebookTitle string) error {
 		if err != nil {
 			return err
 		}
-		note.NotebookID = id
+		note.UpdateNotebook(id)
 	} else {
-		note.NotebookID = notebook.ID
+		note.UpdateNotebook(notebook.ID)
 	}
 
 	return nil
