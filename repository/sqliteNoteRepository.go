@@ -6,7 +6,7 @@ import (
 	"github.com/nicolasmanic/tefter/model"
 	"time"
 )
-
+const DEFAULT_NOTEPAD_ID = 1
 type sqliteNoteRepository struct {
 	*sqlx.DB
 }
@@ -17,11 +17,14 @@ func NewNoteRepository(dbPath string) NoteRepository {
 	return &sqliteNoteRepository{db}
 }
 
-//SaveNote validate note and if everything is as expected persist the object
+//SaveNote persist a note to DB. For a note to be valide the memo field must not be empty.
+//All other fields can be auto-completed.
+//Default values of note fields are: 
+// title: ""
+//Created: current time
+//LastUpdated: current time
+//NotepadId: 1 (Default notepad)
 func (noteRepo *sqliteNoteRepository) SaveNote(note *model.Note) (noteID int64, err error) {
-	if note.Title == "" {
-		return -1, fmt.Errorf("Note should contain title")
-	}
 	if note.Memo == "" {
 		return -1, fmt.Errorf("Note should contain memo")
 	}
@@ -33,7 +36,7 @@ func (noteRepo *sqliteNoteRepository) SaveNote(note *model.Note) (noteID int64, 
 	}
 	//If notebook id is 0 set it to the default notebook.
 	if note.NotebookID == 0 {
-		note.NotebookID = 1
+		note.NotebookID = DEFAULT_NOTEPAD_ID
 	}
 
 	tx, err := noteRepo.Beginx()
@@ -79,21 +82,25 @@ func (noteRepo *sqliteNoteRepository) SaveNote(note *model.Note) (noteID int64, 
 	return noteID, err
 }
 
+//GetNotes return a slice of notes based on the given slice of ids, 
+//if ids slice is empty all notes are returned
 func (noteRepo *sqliteNoteRepository) GetNotes(noteIDs []int64) (notes []*model.Note, err error) {
 	noteIDs = removeDups(noteIDs)
-	if len(noteIDs) == 0 {
-		return []*model.Note{}, nil
-	}
 	selectNote := "SELECT id, title, memo, created, lastUpdated, notebook_id FROM note "
-	whereNote := "WHERE id IN ("
+	var whereNote string
 	args := []interface{}{}
-
-	for _, id := range noteIDs {
-		whereNote = whereNote + "?,"
-		args = append(args, id)
+	if len(noteIDs) != 0 {
+		whereNote = "WHERE id IN ("
+		for _, id := range noteIDs {
+			whereNote = whereNote + "?,"
+			args = append(args, id)
+		}
+		whereNote = whereNote[:len(whereNote)-1]
+		whereNote = whereNote + ") ORDER BY created"
+	} else {
+		whereNote = "WHERE 1"
 	}
-	whereNote = whereNote[:len(whereNote)-1]
-	whereNote = whereNote + ")"
+	
 	querynote := selectNote + whereNote
 	err = noteRepo.Select(&notes, querynote, args...)
 	checkError(err)
@@ -114,6 +121,7 @@ func (noteRepo *sqliteNoteRepository) GetNotes(noteIDs []int64) (notes []*model.
 	return notes, err
 }
 
+//GetNote returns a single note based on an id, returns error if note with id doesn't exist
 func (noteRepo *sqliteNoteRepository) GetNote(noteID int64) (note *model.Note, err error) {
 	notes, err := noteRepo.GetNotes([]int64{noteID})
 	checkError(err)
@@ -124,9 +132,6 @@ func (noteRepo *sqliteNoteRepository) GetNote(noteID int64) (note *model.Note, e
 }
 
 func (noteRepo *sqliteNoteRepository) UpdateNote(note *model.Note) (err error) {
-	if note.Title == "" {
-		return fmt.Errorf("Note should contain title")
-	}
 	if note.Memo == "" {
 		return fmt.Errorf("Note should contain memo")
 	}
@@ -146,15 +151,16 @@ func (noteRepo *sqliteNoteRepository) UpdateNote(note *model.Note) (err error) {
 		if r := recover(); r != nil {
 			panicErr, _ := r.(error)
 			tx.Rollback()
-			err = panicErr
+			err = panicErr 
 		}
 	}()
 
 	updateNoteQuery := `UPDATE note SET
 		title = ?, memo = ?, created = ?, lastUpdated = ?, notebook_id =?  
 		WHERE id = ?`
-	updateNoteNotebook := `UPDATE notebook_note SET notebook_id = ?
-						   WHERE note_id = ?`
+	deleteNoteNotebook := `DELETE FROM notebook_note WHERE note_id = ?`
+	insertNoteNotebook := `INSERT INTO notebook_note (note_id, notebook_id) VALUES (?, ?)`
+
 
 	deleteNoteTagQuery := `DELETE FROM note_tag WHERE note_id = ?`
 	insertNoteTagStmt, err := tx.Preparex(`INSERT INTO note_tag (note_id, tag) VALUES(?,?)`)
@@ -168,9 +174,11 @@ func (noteRepo *sqliteNoteRepository) UpdateNote(note *model.Note) (err error) {
 		note.NotebookID,
 		note.ID)
 
-	tx.MustExec(updateNoteNotebook,
-		note.NotebookID,
-		note.ID)
+	tx.MustExec(deleteNoteNotebook, note.ID)
+
+	tx.MustExec(insertNoteNotebook,
+		note.ID,
+		note.NotebookID	)
 
 	tx.MustExec(deleteNoteTagQuery, note.ID)
 

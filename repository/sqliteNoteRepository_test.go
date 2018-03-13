@@ -4,9 +4,10 @@ import (
 	"github.com/nicolasmanic/tefter/model"
 	"os"
 	"testing"
+	"time"
 )
 
-func TestSaveNote(t *testing.T) {
+func TestSaveNoteCompleteData(t *testing.T) {
 	testRepo := NewNoteRepository("test.db")
 	//tear down test
 	defer func() {
@@ -26,6 +27,35 @@ func TestSaveNote(t *testing.T) {
 	}
 }
 
+func TestSaveNoteMissingData(t *testing.T) {
+	testRepo := NewNoteRepository("test.db")
+	//tear down test
+	defer func() {
+		testRepo.CloseDB()
+		os.Remove("test.db")
+	}()
+
+	mockNoteShouldBeSaved := model.NewNote("", "test Memo", 0, []string{})
+	mockNoteShouldBeSaved.Created = time.Time{}
+	mockNoteShouldBeSaved.LastUpdated = time.Time{}
+	mockNoteShouldNotBeSaved := model.NewNote("", "", 0, []string{})
+	_, err := testRepo.SaveNote(mockNoteShouldBeSaved)
+
+	if err != nil {
+		t.Errorf("Could not save note to DB, error msg: %v", err)
+	}
+
+	if mockNoteShouldBeSaved.ID != DEFAULT_NOTEPAD_ID {
+		t.Error("Could not save note correctly to DB")
+	}
+
+	_, err = testRepo.SaveNote(mockNoteShouldNotBeSaved)
+	if err.Error() != "Note should contain memo" {
+		t.Error("Expected error with message: 'Note should contain memo'")
+	}
+	
+}
+
 func TestGetNotes(t *testing.T) {
 	testRepo := NewNoteRepository("test.db")
 	//tear down test
@@ -36,17 +66,19 @@ func TestGetNotes(t *testing.T) {
 
 	mockNote1 := model.NewNote("testTitle", "test Memo", 1, []string{"testTag1", "testTag2"})
 	mockNote2 := model.NewNote("testTitle", "test Memo", 1, []string{"testTag3", "testTag4"})
+	mockNote3 := model.NewNote("testTitle", "test Memo", 1, []string{})
 
 	id1, _ := testRepo.SaveNote(mockNote1)
 	id2, _ := testRepo.SaveNote(mockNote2)
+	testRepo.SaveNote(mockNote3)
 
 	notes, err := testRepo.GetNotes([]int64{id1, id2})
 	if err != nil {
-		t.Errorf("Could not retrieve note from DB, error msg: %v", err)
+		t.Errorf("Could not retrieve notes from DB, error msg: %v", err)
 	}
 
 	if len(notes) != 2 {
-		t.Error("Could not retrieve note from DB")
+		t.Error("Could not retrieve specific notes from DB")
 	}
 
 	if notes[0].ID != id1 || notes[1].ID != id2 {
@@ -57,8 +89,9 @@ func TestGetNotes(t *testing.T) {
 		t.Error("Could not properly retrieve tags of note from DB")
 	}
 
-	if notes[0].Created.IsZero() || notes[0].Created.IsZero() {
-		t.Error("Could not properly retrieve tags of note from DB")
+	allNotes, err := testRepo.GetNotes([]int64{})
+	if len(allNotes) != 3 {
+		t.Error("Could not retrieve all notes from DB")
 	}
 }
 
@@ -77,9 +110,13 @@ func TestGetNote(t *testing.T) {
 	if err != nil {
 		t.Errorf("Could not retrieve note from DB, error msg: %v", err)
 	}
-
 	if note.ID != id {
 		t.Error("Could not properly retrieve note from DB")
+	}
+
+	_, err = testRepo.GetNote(12345)
+	if err.Error() != "Could find note with id: 12345"{
+		t.Error("Expected error message 'Could find note with id: XXXX'")
 	}
 }
 
