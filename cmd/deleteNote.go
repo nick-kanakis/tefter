@@ -29,4 +29,5 @@ var deleteNoteCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(deleteNoteCmd)
 	deleteNoteCmd.Flags().IntSliceP("ids", "i", []int{}, "Comma-separated note ids")
+	deleteNoteCmd.MarkFlagRequired("ids")
 }
