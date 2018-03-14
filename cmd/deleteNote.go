@@ -12,11 +12,7 @@ var deleteNoteCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		ids, _ := cmd.Flags().GetIntSlice("ids")
-		var ids64 = make([]int64, len(ids))
-
-		for _, id := range ids {
-			ids64 = append(ids64, int64(id))
-		}
+		ids64 := int2int64(ids, len(ids))		
 		err := NoteDB.DeleteNotes(ids64)
 
 		if err != nil {

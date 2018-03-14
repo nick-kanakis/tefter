@@ -4,10 +4,9 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"strings"
 	"os/exec"
+	"strings"
 )
-
 
 func openEditor(text string) (string, error) {
 	vi := "vim"
@@ -16,7 +15,7 @@ func openEditor(text string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	_,err = io.Copy(f, strings.NewReader(text))
+	_, err = io.Copy(f, strings.NewReader(text))
 	if err != nil {
 		return "", err
 	}
@@ -45,4 +44,12 @@ func openEditor(text string) (string, error) {
 	}
 
 	return string(memo), nil
+}
+
+func int2int64(input []int, initialLength int) []int64 {
+	var result = make([]int64, initialLength)
+	for _, tmp := range input {
+		result = append(result, int64(tmp))
+	}
+	return result
 }
