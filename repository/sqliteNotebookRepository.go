@@ -187,9 +187,24 @@ func (notebookRepo *sqliteNotebookRepository) DeleteNotebook(notebookID int64) e
 	return notebookRepo.DeleteNotebooks([]int64{notebookID})
 }
 
+func (notebookRepo *sqliteNotebookRepository)  GetAllNotebooksTitle() (map[int64]string, error){
+	selectNotebook := "SELECT id, title FROM notebook"
+	var notebooks = []model.Notebook{}
+	err := notebookRepo.Select(&notebooks, selectNotebook, []interface{}{}...)
+	checkError(err)
+	
+	var notebookNamesMap = make(map[int64] string)
+	for _, notebook := range notebooks{
+		notebookNamesMap[notebook.ID] = notebook.Title
+	}
+
+	return notebookNamesMap, err
+}
+
 func (notebookRepo *sqliteNotebookRepository) CloseDB() error {
 	return notebookRepo.Close()
 }
+
 
 func (notebookRepo *sqliteNotebookRepository) getNoteIDs(notebookID int64) []int64 {
 	query := "SELECT note_id FROM notebook_note WHERE notebook_id = ?"

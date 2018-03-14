@@ -29,5 +29,6 @@ type NotebookRepository interface {
 	UpdateNotebook(notebook *model.Notebook) error
 	DeleteNotebooks(notebooksIDs []int64) error
 	DeleteNotebook(notebooksID int64) error
+	GetAllNotebooksTitle() (map[int64]string, error)
 	CloseDB() error
 }

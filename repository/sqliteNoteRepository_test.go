@@ -81,10 +81,6 @@ func TestGetNotes(t *testing.T) {
 		t.Error("Could not retrieve specific notes from DB")
 	}
 
-	if notes[0].ID != id1 || notes[1].ID != id2 {
-		t.Error("Could not properly retrieve note from DB")
-	}
-
 	if len(notes[0].Tags) != 2 || len(notes[1].Tags) != 2 {
 		t.Error("Could not properly retrieve tags of note from DB")
 	}
@@ -252,5 +248,4 @@ func TestSearchNoteByTag(t *testing.T) {
 	if !((notes[0].ID != id1 || notes[0].ID != id3) && (notes[1].ID != id1 || notes[1].ID != id3)) {
 		t.Errorf("Could not search notes by tag")
 	}
-
 }
