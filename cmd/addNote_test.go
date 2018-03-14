@@ -89,6 +89,10 @@ func (mockNotebookRepoNotebookExist) DeleteNotebook(notebooksID int64) error {
 	panic("not implemented")
 }
 
+func (mockNotebookRepoNotebookExist) GetAllNotebooksTitle() (map[int64]string, error) {
+	panic("not implemented")
+}
+
 func (mockNotebookRepoNotebookExist) CloseDB() error {
 	panic("not implemented")
 }
@@ -120,6 +124,10 @@ func (mockNotebookRepoNewNotebook) DeleteNotebooks(notebooksIDs []int64) error {
 }
 
 func (mockNotebookRepoNewNotebook) DeleteNotebook(notebooksID int64) error {
+	panic("not implemented")
+}
+
+func (mockNotebookRepoNewNotebook) GetAllNotebooksTitle() (map[int64]string, error) {
 	panic("not implemented")
 }
 
