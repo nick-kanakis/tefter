@@ -130,9 +130,10 @@ func TestUpdateNote(t *testing.T) {
 
 	mockNote := model.NewNote("testTitle", "test Memo", 1, []string{"testTag1", "testTag2"})
 	testRepo.SaveNote(mockNote)
-	mockNote.Memo = "Updated Memo"
-	delete(mockNote.Tags, "testTag1")
-	mockNote.Tags["testTag3"] = true
+	mockNote.UpdateMemo("Updated Memo")
+	mockNote.UpdateTags([]string{"testTag1"})
+	mockNote.Created = time.Time{}
+	mockNote.LastUpdated = time.Time{}
 
 	err := testRepo.UpdateNote(mockNote)
 	if err != nil {
@@ -141,10 +142,16 @@ func TestUpdateNote(t *testing.T) {
 
 	updatedNote, _ := testRepo.GetNotes([]int64{mockNote.ID})
 	if updatedNote[0].Memo != "Updated Memo" {
-		t.Error("Could not update note")
+		t.Error("Could not update note with changed memo")
 	}
-	if len(updatedNote[0].Tags) != 2 || !updatedNote[0].Tags["testTag3"] {
-		t.Error("Could not update note")
+	if len(updatedNote[0].Tags) != 1 || !updatedNote[0].Tags["testTag1"] {
+		t.Error("Could not update note with changed tags")
+	}
+
+	mockNote.UpdateMemo("")
+	err = testRepo.UpdateNote(mockNote)
+	if err.Error() != "Note should contain memo"{
+		t.Error("Expected error with message: 'Note should contain memo'")
 	}
 }
 
@@ -210,6 +217,11 @@ func TestSearchNotesByKeyword(t *testing.T) {
 	}
 	if len(subSetOfNotes) != 1 {
 		t.Error("Could not search notes by keyword")
+	}
+
+	_, err = testRepo.SearchNotesByKeyword("")
+	if err.Error() != "Empty search parameter"{
+		t.Error("Expected error with message: 'Empty search parameter'")
 	}
 }
 

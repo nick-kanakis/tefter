@@ -17,7 +17,7 @@ func NewNoteRepository(dbPath string) NoteRepository {
 	return &sqliteNoteRepository{db}
 }
 
-//SaveNote persist a note to DB. For a note to be valide the memo field must not be empty.
+//SaveNote persist a note to DB. For a note to be valid the memo field must not be empty.
 //All other fields can be auto-completed.
 //Default values of note fields are: 
 // title: ""
@@ -96,7 +96,7 @@ func (noteRepo *sqliteNoteRepository) GetNotes(noteIDs []int64) (notes []*model.
 			args = append(args, id)
 		}
 		whereNote = whereNote[:len(whereNote)-1]
-		whereNote = whereNote + ") ORDER BY created"
+		whereNote = whereNote + ") ORDER BY created desc"
 	} else {
 		whereNote = "WHERE 1"
 	}
@@ -131,6 +131,7 @@ func (noteRepo *sqliteNoteRepository) GetNote(noteID int64) (note *model.Note, e
 	return notes[0], err
 }
 
+//UpdateNote updates an existing note. For a note to be valid the memo field must not be empty.
 func (noteRepo *sqliteNoteRepository) UpdateNote(note *model.Note) (err error) {
 	if note.Memo == "" {
 		return fmt.Errorf("Note should contain memo")
@@ -238,18 +239,21 @@ func (noteRepo *sqliteNoteRepository) DeleteNote(noteID int64) (err error) {
 	return noteRepo.DeleteNotes([]int64{noteID})
 }
 
+//SearchNotesByKeyword searches the DB for notes containing the keyword. Keyword cannot be empty
+//also keyword must be a complete word, partial words can not be matched
 func (noteRepo *sqliteNoteRepository) SearchNotesByKeyword(keyword string) (notes []*model.Note, err error) {
 	if keyword == "" {
 		return nil, fmt.Errorf("Empty search parameter")
 	}
 	query := `SELECT n.id, n.title, n.memo, n.created, n.lastUpdated, n.notebook_id FROM note n 
-			  INNER JOIN note_fts nfs ON n.id = nfs.docid WHERE note_fts MATCH ?`
+			  INNER JOIN note_fts nfs ON n.id = nfs.docid WHERE note_fts MATCH ? ORDER BY n.created desc`
 
 	err = noteRepo.Select(&notes, query, []interface{}{keyword}...)
 	checkError(err)
 	return notes, err
 }
 
+//SearchNotesByTag returns all notes tagged with one or more of tags given as inputs
 func (noteRepo *sqliteNoteRepository) SearchNotesByTag(tags []string) (notes []*model.Note, err error) {
 	selectNote := `SELECT id, title, memo, created, lastUpdated, notebook_id FROM note n 
 				   INNER JOIN note_tag nt ON n.id = nt.note_id `
@@ -262,7 +266,7 @@ func (noteRepo *sqliteNoteRepository) SearchNotesByTag(tags []string) (notes []*
 	}
 
 	whereNote = whereNote[:len(whereNote)-1]
-	whereNote = whereNote + ") ORDER BY n.created"
+	whereNote = whereNote + ") ORDER BY n.created desc"
 
 	queryNote := selectNote + whereNote
 	err = noteRepo.Select(&notes, queryNote, args...)
