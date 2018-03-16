@@ -150,7 +150,6 @@ func TestDeleteNotebooks(t *testing.T) {
 	}
 }
 
-
 func TestGetAllNotebooksTitle(t *testing.T) {
 	testRepo := NewNotebookRepository("test.db")
 	//tear down test
@@ -161,19 +160,19 @@ func TestGetAllNotebooksTitle(t *testing.T) {
 
 	mockNotebook1 := model.NewNotebook("notebook 1")
 	mockNotebook2 := model.NewNotebook("notebook 2")
-	id1, _:=testRepo.SaveNotebook(mockNotebook1)
-	id2, _:=testRepo.SaveNotebook(mockNotebook2)
+	id1, _ := testRepo.SaveNotebook(mockNotebook1)
+	id2, _ := testRepo.SaveNotebook(mockNotebook2)
 
 	result, err := testRepo.GetAllNotebooksTitle()
 	if err != nil {
 		t.Errorf("Could not retrieve notebooks title map from DB, error msg: %v", err)
 	}
 	//2 user defined notebooks and 1 default
-	if len(result) != 3{
+	if len(result) != 3 {
 		t.Error("Size of notebooks title map is incorrect")
 	}
-	
-	if result[id1] != "notebook 1" || result[id2] != "notebook 2"{
+
+	if result[id1] != "notebook 1" || result[id2] != "notebook 2" {
 		t.Error("Incorrect data in Notebook title map")
 	}
 }

@@ -53,7 +53,7 @@ func TestSaveNoteMissingData(t *testing.T) {
 	if err.Error() != "Note should contain memo" {
 		t.Error("Expected error with message: 'Note should contain memo'")
 	}
-	
+
 }
 
 func TestGetNotes(t *testing.T) {
@@ -111,7 +111,7 @@ func TestGetNote(t *testing.T) {
 	}
 
 	_, err = testRepo.GetNote(12345)
-	if err.Error() != "Could find note with id: 12345"{
+	if err.Error() != "Could find note with id: 12345" {
 		t.Error("Expected error message 'Could find note with id: XXXX'")
 	}
 }
@@ -146,7 +146,7 @@ func TestUpdateNote(t *testing.T) {
 
 	mockNote.UpdateMemo("")
 	err = testRepo.UpdateNote(mockNote)
-	if err.Error() != "Note should contain memo"{
+	if err.Error() != "Note should contain memo" {
 		t.Error("Expected error with message: 'Note should contain memo'")
 	}
 }
@@ -216,12 +216,12 @@ func TestSearchNotesByKeyword(t *testing.T) {
 	}
 
 	_, err = testRepo.SearchNotesByKeyword("")
-	if err.Error() != "Empty search parameter"{
+	if err.Error() != "Empty search parameter" {
 		t.Error("Expected error with message: 'Empty search parameter'")
 	}
 }
 
-func TestSearchNoteByTag(t *testing.T) {
+func TestGetNoteByTag(t *testing.T) {
 	testRepo := NewNoteRepository("test.db")
 	//tear down test
 	defer func() {
@@ -237,7 +237,7 @@ func TestSearchNoteByTag(t *testing.T) {
 	testRepo.SaveNote(mockNote2)
 	id3, _ := testRepo.SaveNote(mockNote3)
 
-	notes, err := testRepo.SearchNotesByTag([]string{"testTag1", "testTag5"})
+	notes, err := testRepo.GetNotesByTag([]string{"testTag1", "testTag5"})
 
 	if err != nil {
 		t.Errorf("Could not search notes by tag, err msg: %v", err)
