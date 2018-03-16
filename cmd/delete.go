@@ -6,13 +6,13 @@ import (
 )
 
 var deleteNoteCmd = &cobra.Command{
-	Use:     "deleteNote",
+	Use:     "delete",
 	Short:   "Delete one or more notes based on ID",
-	Example: "deleteNote -i 1,2,...",
+	Example: "delete -i 1,2,...",
 	Run: func(cmd *cobra.Command, args []string) {
 
 		ids, _ := cmd.Flags().GetIntSlice("ids")
-		ids64 := int2int64(ids, len(ids))		
+		ids64 := int2int64(ids, len(ids))
 		err := NoteDB.DeleteNotes(ids64)
 
 		if err != nil {

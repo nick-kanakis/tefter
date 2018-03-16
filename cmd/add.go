@@ -9,9 +9,9 @@ import (
 const DEFAULT_NOTEBOOK_ID = 1
 
 var addNoteCmd = &cobra.Command{
-	Use:     "addNote",
+	Use:     "add",
 	Short:   "Create a new note",
-	Example: "addNote -t title_1 -a tag1,tag2 -n notebook_1",
+	Example: "add -t title_1 --tags tag1,tag2 -n notebook_1",
 	Run: func(cmd *cobra.Command, args []string) {
 		memo, err := openEditor("")
 		if err != nil {
@@ -42,7 +42,7 @@ var addNoteCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(addNoteCmd)
 	addNoteCmd.Flags().StringP("title", "t", "", "Notes title.")
-	addNoteCmd.Flags().StringSliceP("tags", "a", []string{}, "Comma-separated tags of note.")
+	addNoteCmd.Flags().StringSlice("tags", []string{}, "Comma-separated tags of note.")
 	addNoteCmd.Flags().StringP("notebook", "n", "", "Notebook that this note belongs to")
 }
 
