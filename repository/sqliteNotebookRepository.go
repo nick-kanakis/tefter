@@ -104,6 +104,20 @@ func (notebookRepo *sqliteNotebookRepository) GetNotebookByTitle(notebooksTitle 
 	}
 
 	checkError(err)
+	//Use note repository to get the all notes of this notebook.
+	noteRepo := NewNoteRepository(notebookRepo.dbPath)
+	defer noteRepo.CloseDB()
+
+	for _, notebook := range notebooks {
+		noteIDs := notebookRepo.getNoteIDs(notebook.ID)
+		notes, err := noteRepo.GetNotes(noteIDs)
+		checkError(err)
+		notebook.Notes = make(map[int64]*model.Note)
+		for _, note := range notes {
+			notebook.Notes[note.ID] = note
+		}
+	}
+
 	if len(notebooks) > 0 {
 		return notebooks[0], err
 	}
@@ -187,14 +201,14 @@ func (notebookRepo *sqliteNotebookRepository) DeleteNotebook(notebookID int64) e
 	return notebookRepo.DeleteNotebooks([]int64{notebookID})
 }
 
-func (notebookRepo *sqliteNotebookRepository)  GetAllNotebooksTitle() (map[int64]string, error){
+func (notebookRepo *sqliteNotebookRepository) GetAllNotebooksTitle() (map[int64]string, error) {
 	selectNotebook := "SELECT id, title FROM notebook"
 	var notebooks = []model.Notebook{}
 	err := notebookRepo.Select(&notebooks, selectNotebook, []interface{}{}...)
 	checkError(err)
-	
-	var notebookNamesMap = make(map[int64] string)
-	for _, notebook := range notebooks{
+
+	var notebookNamesMap = make(map[int64]string)
+	for _, notebook := range notebooks {
 		notebookNamesMap[notebook.ID] = notebook.Title
 	}
 
@@ -204,7 +218,6 @@ func (notebookRepo *sqliteNotebookRepository)  GetAllNotebooksTitle() (map[int64
 func (notebookRepo *sqliteNotebookRepository) CloseDB() error {
 	return notebookRepo.Close()
 }
-
 
 func (notebookRepo *sqliteNotebookRepository) getNoteIDs(notebookID int64) []int64 {
 	query := "SELECT note_id FROM notebook_note WHERE notebook_id = ?"

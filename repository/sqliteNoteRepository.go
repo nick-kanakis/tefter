@@ -6,7 +6,9 @@ import (
 	"github.com/nicolasmanic/tefter/model"
 	"time"
 )
+
 const DEFAULT_NOTEPAD_ID = 1
+
 type sqliteNoteRepository struct {
 	*sqlx.DB
 }
@@ -19,7 +21,7 @@ func NewNoteRepository(dbPath string) NoteRepository {
 
 //SaveNote persist a note to DB. For a note to be valid the memo field must not be empty.
 //All other fields can be auto-completed.
-//Default values of note fields are: 
+//Default values of note fields are:
 // title: ""
 //Created: current time
 //LastUpdated: current time
@@ -82,7 +84,7 @@ func (noteRepo *sqliteNoteRepository) SaveNote(note *model.Note) (noteID int64, 
 	return noteID, err
 }
 
-//GetNotes return a slice of notes based on the given slice of ids, 
+//GetNotes return a slice of notes based on the given slice of ids,
 //if ids slice is empty all notes are returned
 func (noteRepo *sqliteNoteRepository) GetNotes(noteIDs []int64) (notes []*model.Note, err error) {
 	noteIDs = removeDups(noteIDs)
@@ -98,9 +100,9 @@ func (noteRepo *sqliteNoteRepository) GetNotes(noteIDs []int64) (notes []*model.
 		whereNote = whereNote[:len(whereNote)-1]
 		whereNote = whereNote + ") ORDER BY created desc"
 	} else {
-		whereNote = "WHERE 1"
+		whereNote = "WHERE 1 ORDER BY created desc"
 	}
-	
+
 	querynote := selectNote + whereNote
 	err = noteRepo.Select(&notes, querynote, args...)
 	checkError(err)
@@ -152,7 +154,7 @@ func (noteRepo *sqliteNoteRepository) UpdateNote(note *model.Note) (err error) {
 		if r := recover(); r != nil {
 			panicErr, _ := r.(error)
 			tx.Rollback()
-			err = panicErr 
+			err = panicErr
 		}
 	}()
 
@@ -161,7 +163,6 @@ func (noteRepo *sqliteNoteRepository) UpdateNote(note *model.Note) (err error) {
 		WHERE id = ?`
 	deleteNoteNotebook := `DELETE FROM notebook_note WHERE note_id = ?`
 	insertNoteNotebook := `INSERT INTO notebook_note (note_id, notebook_id) VALUES (?, ?)`
-
 
 	deleteNoteTagQuery := `DELETE FROM note_tag WHERE note_id = ?`
 	insertNoteTagStmt, err := tx.Preparex(`INSERT INTO note_tag (note_id, tag) VALUES(?,?)`)
@@ -179,7 +180,7 @@ func (noteRepo *sqliteNoteRepository) UpdateNote(note *model.Note) (err error) {
 
 	tx.MustExec(insertNoteNotebook,
 		note.ID,
-		note.NotebookID	)
+		note.NotebookID)
 
 	tx.MustExec(deleteNoteTagQuery, note.ID)
 
@@ -253,8 +254,8 @@ func (noteRepo *sqliteNoteRepository) SearchNotesByKeyword(keyword string) (note
 	return notes, err
 }
 
-//SearchNotesByTag returns all notes tagged with one or more of tags given as inputs
-func (noteRepo *sqliteNoteRepository) SearchNotesByTag(tags []string) (notes []*model.Note, err error) {
+//GetNotesByTag returns all notes tagged with one or more of tags given as inputs
+func (noteRepo *sqliteNoteRepository) GetNotesByTag(tags []string) (notes []*model.Note, err error) {
 	selectNote := `SELECT id, title, memo, created, lastUpdated, notebook_id FROM note n 
 				   INNER JOIN note_tag nt ON n.id = nt.note_id `
 	whereNote := "WHERE nt.tag IN ("
@@ -271,6 +272,19 @@ func (noteRepo *sqliteNoteRepository) SearchNotesByTag(tags []string) (notes []*
 	queryNote := selectNote + whereNote
 	err = noteRepo.Select(&notes, queryNote, args...)
 	checkError(err)
+
+	selectTagStmt, err := noteRepo.Preparex("SELECT tag FROM note_tag WHERE note_id = ?")
+	checkError(err)
+
+	for _, note := range notes {
+		tags := []string{}
+		err = selectTagStmt.Select(&tags, note.ID)
+		checkError(err)
+		note.Tags = make(map[string]bool)
+		for _, tag := range tags {
+			note.Tags[tag] = true
+		}
+	}
 
 	return notes, err
 }
