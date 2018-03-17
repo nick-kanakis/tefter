@@ -62,8 +62,7 @@ func collectNotes(ids []int, notebookTitles, tags []string, printAll bool) map[i
 	if printAll {
 		allNotes, err := NoteDB.GetNotes([]int64{})
 		if err != nil {
-			fmt.Printf("Error while retrieving notes by id , error msg: %v", err)
-			return nil
+			log.Panicf("Error while retrieving notes by id , error msg: %v", err)
 		} 
 		for _, note := range allNotes {
 			notesMap[note.ID] = note
@@ -74,8 +73,7 @@ func collectNotes(ids []int, notebookTitles, tags []string, printAll bool) map[i
 	if len(ids) > 0 {
 		idNotes, err := NoteDB.GetNotes(int2int64(ids))
 		if err != nil {
-			fmt.Printf("Error while retrieving notes by id, error msg: %v", err)
-			return nil
+			log.Panicf("Error while retrieving notes by id, error msg: %v", err)
 		}
 		for _, note := range idNotes {
 			notesMap[note.ID] = note
@@ -87,8 +85,7 @@ func collectNotes(ids []int, notebookTitles, tags []string, printAll bool) map[i
 		for _, notebookTitle := range notebookTitles {
 			notebook, err := NotebookDB.GetNotebookByTitle(notebookTitle)
 			if err != nil {
-				fmt.Printf("Error while retrieving notebook for title: %v, error msg %v", notebookTitle, err)
-				return nil
+				log.Panicf("Error while retrieving notebook for title: %v, error msg %v", notebookTitle, err)
 			} else if notebook != nil {
 				for _, note := range notebook.Notes {
 					notesMap[note.ID] = note
@@ -99,8 +96,7 @@ func collectNotes(ids []int, notebookTitles, tags []string, printAll bool) map[i
 	if len(tags) > 0 {
 		tagNotes, err := NoteDB.GetNotesByTag(tags)
 		if err != nil {
-			fmt.Print("Error while retrieving notes by tag, error msg: %v", err)
-			return nil
+			log.Panicf("Error while retrieving notes by tag, error msg: %v", err)
 		}
 		for _, note := range tagNotes {
 			notesMap[note.ID] = note
