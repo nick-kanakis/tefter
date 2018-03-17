@@ -1,32 +1,33 @@
 package cmd
 
 import (
+	"log"
 	"fmt"
-	"github.com/nicolasmanic/tefter/model"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
+	"github.com/nicolasmanic/tefter/model"
 )
 
 //TODO: unit test
-func openEditor(text string) (string, error) {
+func viEditor(text string) string {
 	vi := "vim"
 	fpath := os.TempDir() + "/tmpMemo.txt"
 	f, err := os.Create(fpath)
+	defer os.Remove(fpath)
 	if err != nil {
-		return "", err
+		log.Fatalf("Could not create tmp file for memo, error msg %v", err)
 	}
 	_, err = io.Copy(f, strings.NewReader(text))
 	if err != nil {
-		return "", err
+		fmt.Printf("Failed copying memo to tmp file, error msg: %v\n", err)
 	}
 	f.Close()
-	defer os.Remove(fpath)
 	path, err := exec.LookPath(vi)
 	if err != nil {
-		return "", err
+		log.Fatalf("Could not open VI, error msg %v", err)
 	}
 
 	cmd := exec.Command(path, fpath)
@@ -34,19 +35,18 @@ func openEditor(text string) (string, error) {
 	cmd.Stdout = os.Stdout
 	err = cmd.Start()
 	if err != nil {
-		return "", err
+		log.Fatalf("Could not start VI, error msg %v", err)
 	}
 	err = cmd.Wait()
 	if err != nil {
-		return "", err
+		log.Fatalf("Error while using editing memo, error msg %v", err)
 	}
 
 	memo, err := ioutil.ReadFile(fpath)
 	if err != nil {
-		return "", err
+		log.Fatalf("Could not read tmp file, error msg %v", err)
 	}
-
-	return string(memo), nil
+	return string(memo)
 }
 
 func int2int64(input []int) []int64 {
@@ -62,11 +62,11 @@ func collectNotes(ids []int, notebookTitles, tags []string, printAll bool) map[i
 	if printAll {
 		allNotes, err := NoteDB.GetNotes([]int64{})
 		if err != nil {
-			fmt.Print("Error while retrieving notes by id")
-		} else {
-			for _, note := range allNotes {
-				notesMap[note.ID] = note
-			}
+			fmt.Printf("Error while retrieving notes by id , error msg: %v", err)
+			return nil
+		} 
+		for _, note := range allNotes {
+			notesMap[note.ID] = note
 		}
 		return notesMap
 	}
@@ -74,35 +74,36 @@ func collectNotes(ids []int, notebookTitles, tags []string, printAll bool) map[i
 	if len(ids) > 0 {
 		idNotes, err := NoteDB.GetNotes(int2int64(ids))
 		if err != nil {
-			fmt.Print("Error while retrieving notes by id")
-		} else {
-			for _, note := range idNotes {
-				notesMap[note.ID] = note
-			}
+			fmt.Printf("Error while retrieving notes by id, error msg: %v", err)
+			return nil
 		}
+		for _, note := range idNotes {
+			notesMap[note.ID] = note
+		}
+		
 	}
 	if len(notebookTitles) > 0 {
 		//Add notes based on notebook
 		for _, notebookTitle := range notebookTitles {
 			notebook, err := NotebookDB.GetNotebookByTitle(notebookTitle)
 			if err != nil {
-				fmt.Printf("Error while retrieving notebook for title: %v", notebookTitle)
+				fmt.Printf("Error while retrieving notebook for title: %v, error msg %v", notebookTitle, err)
+				return nil
 			} else if notebook != nil {
 				for _, note := range notebook.Notes {
 					notesMap[note.ID] = note
 				}
-
 			}
 		}
 	}
 	if len(tags) > 0 {
 		tagNotes, err := NoteDB.GetNotesByTag(tags)
 		if err != nil {
-			fmt.Print("Error while retrieving notes by tag")
-		} else {
-			for _, note := range tagNotes {
-				notesMap[note.ID] = note
-			}
+			fmt.Print("Error while retrieving notes by tag, error msg: %v", err)
+			return nil
+		}
+		for _, note := range tagNotes {
+			notesMap[note.ID] = note
 		}
 	}
 	return notesMap

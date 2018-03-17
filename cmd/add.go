@@ -13,11 +13,8 @@ var addNoteCmd = &cobra.Command{
 	Short:   "Create a new note",
 	Example: "add -t title_1 --tags tag1,tag2 -n notebook_1",
 	Run: func(cmd *cobra.Command, args []string) {
-		memo, err := openEditor("")
-		if err != nil {
-			//TODO handle the error
-			fmt.Printf("error msg: %v", err)
-		}
+		memo:= viEditor("")
+		
 		title, _ := cmd.Flags().GetString("title")
 		tags, _ := cmd.Flags().GetStringSlice("tags")
 		notebookTitle, _ := cmd.Flags().GetString("notebook")
@@ -25,7 +22,7 @@ var addNoteCmd = &cobra.Command{
 		//By default all newNotes will be inserted to default notebook
 		//In next steps the notebook may change
 		note := model.NewNote(title, memo, DEFAULT_NOTEBOOK_ID, tags)
-		err = addNotebookToNote(note, notebookTitle)
+		err := addNotebookToNote(note, notebookTitle)
 		if err != nil {
 			//TODO handle the error
 			fmt.Printf("error msg: %v", err)

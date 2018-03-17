@@ -22,9 +22,9 @@ var printCmd = &cobra.Command{
 		tags, _ := cmd.Flags().GetStringSlice("tags")
 		printAll, _ := cmd.Flags().GetBool("all")
 
-		notes := accumulateNotes(ids, notebookTitles, tags, printAll)
+		notes := collectNotes(ids, notebookTitles, tags, printAll)
 
-		printNotes2Terminal(map2slice(notes))
+		printNotes2Terminal(noteMap2Slice(notes))
 	},
 }
 
