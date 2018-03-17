@@ -49,15 +49,15 @@ func openEditor(text string) (string, error) {
 	return string(memo), nil
 }
 
-func int2int64(input []int, initialLength int) []int64 {
-	var result = make([]int64, initialLength)
+func int2int64(input []int) []int64 {
+	var result = make([]int64, 0, len(input))
 	for _, tmp := range input {
 		result = append(result, int64(tmp))
 	}
 	return result
 }
 
-func accumulateNotes(ids []int, notebookTitles, tags []string, printAll bool) map[int64]*model.Note {
+func collectNotes(ids []int, notebookTitles, tags []string, printAll bool) map[int64]*model.Note {
 	var notesMap = make(map[int64]*model.Note, 0)
 	if printAll {
 		allNotes, err := NoteDB.GetNotes([]int64{})
@@ -72,7 +72,7 @@ func accumulateNotes(ids []int, notebookTitles, tags []string, printAll bool) ma
 	}
 	//Add notes based on id
 	if len(ids) > 0 {
-		idNotes, err := NoteDB.GetNotes(int2int64(ids, 0))
+		idNotes, err := NoteDB.GetNotes(int2int64(ids))
 		if err != nil {
 			fmt.Print("Error while retrieving notes by id")
 		} else {
@@ -108,10 +108,18 @@ func accumulateNotes(ids []int, notebookTitles, tags []string, printAll bool) ma
 	return notesMap
 }
 
-func map2slice(m map[int64]*model.Note) []*model.Note {
-	notes := []*model.Note{}
+func noteMap2Slice(m map[int64]*model.Note) []*model.Note {
+	notes := make([]*model.Note,0, len(m))
 	for _, note := range m {
 		notes = append(notes, note)
 	}
 	return notes
+}
+
+func tagMap2Slice(m map[string]bool) []string {
+	tags := make([]string,0,len(m))
+	for tag := range m {
+		tags = append(tags, tag)
+	}
+	return tags
 }
