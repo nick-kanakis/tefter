@@ -1,6 +1,9 @@
 package repository
 
-import "github.com/jmoiron/sqlx"
+import (
+	"github.com/jmoiron/sqlx"
+	"log"
+)
 
 const databaseDriver = "sqlite3"
 
@@ -12,9 +15,9 @@ func connect2DB(dbPath string) *sqlx.DB {
 	defer func() {
 		if r := recover(); r != nil {
 			err = r.(error)
-			//TODO: log error
 			tx.Rollback()
 			db = nil
+			log.Fatalf("Could note  connect to DB error msg: %v", err)
 		}
 	}()
 
@@ -74,8 +77,7 @@ func connect2DB(dbPath string) *sqlx.DB {
 
 func checkError(err error) {
 	if err != nil {
-		//TODO: logs
-		panic(err)
+		log.Panicln(err)
 	}
 }
 

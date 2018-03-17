@@ -5,8 +5,6 @@ import (
 	"github.com/nicolasmanic/tefter/model"
 )
 
-//FIXME: Is there a cleaner way to implement separation of conserns for Repository layer???
-
 //NoteRepository is an interface for handling DB related tasks for Note
 type NoteRepository interface {
 	SaveNote(note *model.Note) (int64, error)

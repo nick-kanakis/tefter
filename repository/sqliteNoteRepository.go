@@ -190,7 +190,6 @@ func (noteRepo *sqliteNoteRepository) UpdateNote(note *model.Note) (err error) {
 
 	err = tx.Commit()
 	checkError(err)
-
 	return err
 }
 
