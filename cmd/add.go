@@ -13,8 +13,8 @@ var addNoteCmd = &cobra.Command{
 	Short:   "Create a new note",
 	Example: "add -t title_1 --tags tag1,tag2 -n notebook_1",
 	Run: func(cmd *cobra.Command, args []string) {
-		memo:= viEditor("")
-		
+		memo := viEditor("")
+
 		title, _ := cmd.Flags().GetString("title")
 		tags, _ := cmd.Flags().GetStringSlice("tags")
 		notebookTitle, _ := cmd.Flags().GetString("notebook")

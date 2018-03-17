@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"reflect"
-	"testing"
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/nicolasmanic/tefter/repository"
+	"reflect"
+	"testing"
 )
 
 func TestInt2int64(t *testing.T) {
@@ -85,7 +85,7 @@ func TestTagMap2Slice(t *testing.T) {
 	}
 }
 
-func TestCollectNotes(t *testing.T){
+func TestCollectNotes(t *testing.T) {
 	oldNotebookDB := NotebookDB
 	oldNoteDB := NoteDB
 	NoteDB = mockNoteDBUtils{}
@@ -96,43 +96,43 @@ func TestCollectNotes(t *testing.T){
 		NoteDB = oldNoteDB
 	}()
 
-	noteMap:= collectNotes([]int{1}, []string{"notebookTitle"}, []string{"testTag"}, false)
-	if len(noteMap) !=4 {
+	noteMap := collectNotes([]int{1}, []string{"notebookTitle"}, []string{"testTag"}, false)
+	if len(noteMap) != 4 {
 		t.Error("Error while collecting notes per id, notebook title and tags")
 	}
-	allNotes:= collectNotes([]int{}, []string{}, []string{}, true)
-	if len(allNotes) !=1 {
+	allNotes := collectNotes([]int{}, []string{}, []string{}, true)
+	if len(allNotes) != 1 {
 		t.Error("Error while collectingall notes")
 	}
 }
 
-type mockNotebookDBUtils struct{
+type mockNotebookDBUtils struct {
 	repository.NotebookRepository
 }
 
-type mockNoteDBUtils struct{
+type mockNoteDBUtils struct {
 	repository.NoteRepository
 }
 
-func (mDB mockNoteDBUtils) GetNotesByTag(tags []string) ([]*model.Note, error){
-	note1:= model.NewNote("testTitle", "testMemo", DEFAULT_NOTEBOOK_ID, []string{})
+func (mDB mockNoteDBUtils) GetNotesByTag(tags []string) ([]*model.Note, error) {
+	note1 := model.NewNote("testTitle", "testMemo", DEFAULT_NOTEBOOK_ID, []string{})
 	note1.ID = 1
-	note2:= model.NewNote("testTitle2", "testMemo2", DEFAULT_NOTEBOOK_ID, []string{})
+	note2 := model.NewNote("testTitle2", "testMemo2", DEFAULT_NOTEBOOK_ID, []string{})
 	note2.ID = 2
 	return []*model.Note{note1, note2}, nil
 }
 
-func (mDB mockNotebookDBUtils) GetNotebookByTitle(notebooksTitle string) (*model.Notebook, error){
+func (mDB mockNotebookDBUtils) GetNotebookByTitle(notebooksTitle string) (*model.Notebook, error) {
 	notebook := model.NewNotebook(notebooksTitle)
 	notebook.ID = 1
-	note:= model.NewNote("testTitle", "testMemo", notebook.ID, []string{})
+	note := model.NewNote("testTitle", "testMemo", notebook.ID, []string{})
 	note.ID = 3
 	notebook.AddNote(note)
 	return notebook, nil
 }
 
-func (mDB mockNoteDBUtils) GetNotes(noteIDs []int64) ([]*model.Note, error){
-	note:= model.NewNote("testTitle4", "testMemo", DEFAULT_NOTEBOOK_ID, []string{})
+func (mDB mockNoteDBUtils) GetNotes(noteIDs []int64) ([]*model.Note, error) {
+	note := model.NewNote("testTitle4", "testMemo", DEFAULT_NOTEBOOK_ID, []string{})
 	note.ID = 4
 	return []*model.Note{note}, nil
 }

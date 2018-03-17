@@ -87,7 +87,7 @@ func TestGetNotes(t *testing.T) {
 	if len(notes[0].Tags) != 2 || len(notes[1].Tags) != 2 {
 		t.Error("Could not properly retrieve tags of note from DB")
 	}
-	allNotes, err := testRepo.GetNotes([]int64{})
+	allNotes, _ := testRepo.GetNotes([]int64{})
 	if len(allNotes) != 3 {
 		t.Error("Could not retrieve all notes from DB")
 	}

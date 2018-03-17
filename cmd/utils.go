@@ -1,14 +1,14 @@
 package cmd
 
 import (
-	"log"
 	"fmt"
+	"github.com/nicolasmanic/tefter/model"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
-	"github.com/nicolasmanic/tefter/model"
 )
 
 //TODO: unit test
@@ -63,7 +63,7 @@ func collectNotes(ids []int, notebookTitles, tags []string, printAll bool) map[i
 		allNotes, err := NoteDB.GetNotes([]int64{})
 		if err != nil {
 			log.Panicf("Error while retrieving notes by id , error msg: %v", err)
-		} 
+		}
 		for _, note := range allNotes {
 			notesMap[note.ID] = note
 		}
@@ -78,7 +78,7 @@ func collectNotes(ids []int, notebookTitles, tags []string, printAll bool) map[i
 		for _, note := range idNotes {
 			notesMap[note.ID] = note
 		}
-		
+
 	}
 	if len(notebookTitles) > 0 {
 		//Add notes based on notebook
@@ -106,7 +106,7 @@ func collectNotes(ids []int, notebookTitles, tags []string, printAll bool) map[i
 }
 
 func noteMap2Slice(m map[int64]*model.Note) []*model.Note {
-	notes := make([]*model.Note,0, len(m))
+	notes := make([]*model.Note, 0, len(m))
 	for _, note := range m {
 		notes = append(notes, note)
 	}
@@ -114,7 +114,7 @@ func noteMap2Slice(m map[int64]*model.Note) []*model.Note {
 }
 
 func tagMap2Slice(m map[string]bool) []string {
-	tags := make([]string,0,len(m))
+	tags := make([]string, 0, len(m))
 	for tag := range m {
 		tags = append(tags, tag)
 	}

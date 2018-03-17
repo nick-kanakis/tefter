@@ -101,7 +101,7 @@ func (notebookRepo *sqliteNotebookRepository) GetNotebookByTitle(notebooksTitle 
 
 	if len(notebooks) > 1 {
 		return nil, fmt.Errorf(`Found more than one notebooks with the same title,
-			 this should not have happended since titles are unique in DB`)
+			 this should not have happened since titles are unique in DB`)
 	}
 
 	checkError(err)

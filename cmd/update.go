@@ -1,16 +1,16 @@
 package cmd
 
 import (
-	"log"
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/spf13/cobra"
+	"log"
 )
 
 var updateCmd = &cobra.Command{
 	Use:     "update",
 	Short:   "Update existing note",
 	Example: "update-i id -t title_1 -tags tag1,tag2 -n notebook_1",
-	Run: updateWrapper,
+	Run:     updateWrapper,
 }
 
 func init() {
@@ -22,7 +22,7 @@ func init() {
 	updateCmd.Flags().StringP("notebook", "n", "", "Notebook that this note belongs to")
 }
 
-func updateWrapper(cmd *cobra.Command, args []string){
+func updateWrapper(cmd *cobra.Command, args []string) {
 	id, _ := cmd.Flags().GetInt64("id")
 	title, _ := cmd.Flags().GetString("title")
 	tags, _ := cmd.Flags().GetStringSlice("tags")
@@ -30,7 +30,7 @@ func updateWrapper(cmd *cobra.Command, args []string){
 	update(id, title, tags, notebookTitle, viEditor)
 }
 
-func update(id int64, title string, tags []string, notebookTitle string, editor func(text string) string){
+func update(id int64, title string, tags []string, notebookTitle string, editor func(text string) string) {
 	note, err := NoteDB.GetNote(id)
 	if err != nil {
 		log.Panicf("Error while retrieving Note from DB, error msg: %v", err)
