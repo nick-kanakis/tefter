@@ -48,22 +48,22 @@ func (notebookRepo *sqliteNotebookRepository) SaveNotebook(notebook *model.Noteb
 
 func (notebookRepo *sqliteNotebookRepository) GetNotebooks(notebooksIDs []int64) (notebooks []*model.Notebook, err error) {
 	notebooksIDs = removeDups(notebooksIDs)
-	if len(notebooksIDs) == 0 {
-		return []*model.Notebook{}, nil
-	}
 
 	selectNotebook := "SELECT id, title FROM notebook "
 	whereIDIn := "WHERE id IN ("
-
 	args := []interface{}{}
-	for _, id := range notebooksIDs {
-		whereIDIn = whereIDIn + "?,"
-		args = append(args, id)
+	if len(notebooksIDs) == 0 {
+		whereIDIn = "WHERE 1"
+	} else {
+		for _, id := range notebooksIDs {
+			whereIDIn = whereIDIn + "?,"
+			args = append(args, id)
+		}
+		whereIDIn = whereIDIn[:len(whereIDIn)-1]
+		whereIDIn = whereIDIn + ")"
 	}
-	whereIDIn = whereIDIn[:len(whereIDIn)-1]
-	whereIDIn = whereIDIn + ")"
-	querynotebook := selectNotebook + whereIDIn
 
+	querynotebook := selectNotebook + whereIDIn
 	err = notebookRepo.Select(&notebooks, querynotebook, args...)
 	checkError(err)
 
@@ -100,7 +100,8 @@ func (notebookRepo *sqliteNotebookRepository) GetNotebookByTitle(notebooksTitle 
 	err = notebookRepo.Select(&notebooks, query, []interface{}{notebooksTitle}...)
 
 	if len(notebooks) > 1 {
-		return nil, fmt.Errorf("Found more than one notebooks with the same title")
+		return nil, fmt.Errorf(`Found more than one notebooks with the same title,
+			 this should not have happended since titles are unique in DB`)
 	}
 
 	checkError(err)

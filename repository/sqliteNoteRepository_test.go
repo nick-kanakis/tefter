@@ -15,13 +15,12 @@ func TestSaveNoteCompleteData(t *testing.T) {
 		os.Remove("test.db")
 	}()
 
-	mockNote := model.NewNote("testTitle", "test Memo", 1, []string{"testTag1", "testTag2"})
+	mockNote := model.NewNote("testTitle", "test Memo", DEFAULT_NOTEPAD_ID, []string{"testTag1", "testTag2"})
 	id, err := testRepo.SaveNote(mockNote)
 
 	if err != nil {
 		t.Errorf("Could not save note to DB, error msg: %v", err)
 	}
-
 	if id != mockNote.ID {
 		t.Error("Could not save correctly note to DB")
 	}
@@ -38,22 +37,28 @@ func TestSaveNoteMissingData(t *testing.T) {
 	mockNoteShouldBeSaved := model.NewNote("", "test Memo", 0, []string{})
 	mockNoteShouldBeSaved.Created = time.Time{}
 	mockNoteShouldBeSaved.LastUpdated = time.Time{}
-	mockNoteShouldNotBeSaved := model.NewNote("", "", 0, []string{})
 	_, err := testRepo.SaveNote(mockNoteShouldBeSaved)
-
 	if err != nil {
 		t.Errorf("Could not save note to DB, error msg: %v", err)
 	}
-
 	if mockNoteShouldBeSaved.ID != DEFAULT_NOTEPAD_ID {
 		t.Error("Could not save note correctly to DB")
 	}
+}
 
-	_, err = testRepo.SaveNote(mockNoteShouldNotBeSaved)
+func TestSaveNoteWithEmptyMemoField(t *testing.T) {
+	testRepo := NewNoteRepository("test.db")
+	//tear down test
+	defer func() {
+		testRepo.CloseDB()
+		os.Remove("test.db")
+	}()
+
+	mockNoteShouldNotBeSaved := model.NewNote("", "", 0, []string{})
+	_, err := testRepo.SaveNote(mockNoteShouldNotBeSaved)
 	if err.Error() != "Note should contain memo" {
 		t.Error("Expected error with message: 'Note should contain memo'")
 	}
-
 }
 
 func TestGetNotes(t *testing.T) {
@@ -64,9 +69,9 @@ func TestGetNotes(t *testing.T) {
 		os.Remove("test.db")
 	}()
 
-	mockNote1 := model.NewNote("testTitle", "test Memo", 1, []string{"testTag1", "testTag2"})
-	mockNote2 := model.NewNote("testTitle", "test Memo", 1, []string{"testTag3", "testTag4"})
-	mockNote3 := model.NewNote("testTitle", "test Memo", 1, []string{})
+	mockNote1 := model.NewNote("testTitle", "test Memo", DEFAULT_NOTEPAD_ID, []string{"testTag1", "testTag2"})
+	mockNote2 := model.NewNote("testTitle", "test Memo", DEFAULT_NOTEPAD_ID, []string{"testTag3", "testTag4"})
+	mockNote3 := model.NewNote("testTitle", "test Memo", DEFAULT_NOTEPAD_ID, []string{})
 
 	id1, _ := testRepo.SaveNote(mockNote1)
 	id2, _ := testRepo.SaveNote(mockNote2)
@@ -76,15 +81,12 @@ func TestGetNotes(t *testing.T) {
 	if err != nil {
 		t.Errorf("Could not retrieve notes from DB, error msg: %v", err)
 	}
-
 	if len(notes) != 2 {
 		t.Error("Could not retrieve specific notes from DB")
 	}
-
 	if len(notes[0].Tags) != 2 || len(notes[1].Tags) != 2 {
 		t.Error("Could not properly retrieve tags of note from DB")
 	}
-
 	allNotes, err := testRepo.GetNotes([]int64{})
 	if len(allNotes) != 3 {
 		t.Error("Could not retrieve all notes from DB")
@@ -109,8 +111,16 @@ func TestGetNote(t *testing.T) {
 	if note.ID != id {
 		t.Error("Could not properly retrieve note from DB")
 	}
+}
 
-	_, err = testRepo.GetNote(12345)
+func TestGetNoteNotExistingID(t *testing.T) {
+	testRepo := NewNoteRepository("test.db")
+	//tear down test
+	defer func() {
+		testRepo.CloseDB()
+		os.Remove("test.db")
+	}()
+	_, err := testRepo.GetNote(12345)
 	if err.Error() != "Could find note with id: 12345" {
 		t.Error("Expected error message 'Could find note with id: XXXX'")
 	}
@@ -214,8 +224,16 @@ func TestSearchNotesByKeyword(t *testing.T) {
 	if len(subSetOfNotes) != 1 {
 		t.Error("Could not search notes by keyword")
 	}
+}
 
-	_, err = testRepo.SearchNotesByKeyword("")
+func TestSearchNotesByKeywordEmptyKeyword(t *testing.T) {
+	testRepo := NewNoteRepository("test.db")
+	//tear down test
+	defer func() {
+		testRepo.CloseDB()
+		os.Remove("test.db")
+	}()
+	_, err := testRepo.SearchNotesByKeyword("")
 	if err.Error() != "Empty search parameter" {
 		t.Error("Expected error with message: 'Empty search parameter'")
 	}

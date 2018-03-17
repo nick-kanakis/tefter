@@ -74,7 +74,7 @@ func connect2DB(dbPath string) *sqlx.DB {
 
 func checkError(err error) {
 	if err != nil {
-		//todo logs
+		//TODO: logs
 		panic(err)
 	}
 }
