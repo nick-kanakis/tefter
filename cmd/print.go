@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"log"
 	"fmt"
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/spf13/cobra"
@@ -23,7 +24,6 @@ var printCmd = &cobra.Command{
 		printAll, _ := cmd.Flags().GetBool("all")
 
 		notes := collectNotes(ids, notebookTitles, tags, printAll)
-
 		printNotes2Terminal(noteMap2Slice(notes))
 	},
 }
@@ -40,8 +40,7 @@ func init() {
 func printNotes2Terminal(notes []*model.Note) {
 	notebookTitlesMap, err := NotebookDB.GetAllNotebooksTitle()
 	if err != nil {
-		//TODO handle the error
-		fmt.Printf("error msg: %v", err)
+		log.Panicf("Error while retrieving notebook by title, error msg: %v", err)
 	}
 	for _, note := range notes {
 		fmt.Println("------------------------------")

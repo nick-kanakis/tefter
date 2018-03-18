@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"testing"
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/nicolasmanic/tefter/repository"
-	"testing"
 )
 
 func TestUpdate(t *testing.T) {

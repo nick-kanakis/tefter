@@ -23,7 +23,7 @@ type NotebookRepository interface {
 	SaveNotebook(notebook *model.Notebook) (int64, error)
 	GetNotebooks(notebooksIDs []int64) ([]*model.Notebook, error)
 	GetNotebook(notebooksID int64) (*model.Notebook, error)
-	GetNotebookByTitle(notebooksTitle string) (*model.Notebook, error)
+	GetNotebookByTitle(notebookTitle string) (*model.Notebook, error)
 	GetAllNotebooksTitle() (map[int64]string, error)
 	UpdateNotebook(notebook *model.Notebook) error
 	DeleteNotebooks(notebooksIDs []int64) error
