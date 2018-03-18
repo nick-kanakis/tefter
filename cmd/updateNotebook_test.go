@@ -18,9 +18,12 @@ func TestUpdateNotebook(t *testing.T) {
 }
 
 func TestUpdateNotebookShouldPanic(t *testing.T) {
+	oldNotebookDB := NotebookDB
+	NotebookDB = mockNotebookDBUpdateNotebook{}
 	defer func() {
+		NotebookDB = oldNotebookDB
 		if r := recover(); r == nil {
-			t.Errorf("The code did not panic")
+			t.Errorf("Empty arguments should cause the update cmd to panic")
 		}
 	}()
 	updateNotebook([]string{})
@@ -37,8 +40,8 @@ func (mDB mockNotebookDBUpdateNotebook) UpdateNotebook(notebook *model.Notebook)
 	return nil
 }
 
-func (mDB mockNotebookDBUpdateNotebook) GetNotebookByTitle(notebooksTitle string) (*model.Notebook, error) {
-	notebook := model.NewNotebook(notebooksTitle)
+func (mDB mockNotebookDBUpdateNotebook) GetNotebookByTitle(notebookTitle string) (*model.Notebook, error) {
+	notebook := model.NewNotebook(notebookTitle)
 	notebook.ID = 1
 	note := model.NewNote("testTitle", "testMemo", notebook.ID, []string{})
 	note.ID = 3

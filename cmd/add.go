@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"log"
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/spf13/cobra"
+	"log"
 )
 
 const DEFAULT_NOTEBOOK_ID = 1
@@ -13,7 +13,7 @@ var addNoteCmd = &cobra.Command{
 	Short:   "Create a new note",
 	Example: "add -t title_1 --tags tag1,tag2 -n notebook_1",
 	Run: func(cmd *cobra.Command, args []string) {
-		
+
 	},
 }
 
@@ -24,14 +24,14 @@ func init() {
 	addNoteCmd.Flags().StringP("notebook", "n", "", "Notebook that this note belongs to")
 }
 
-func addWrapper(cmd *cobra.Command, args []string){
+func addWrapper(cmd *cobra.Command, args []string) {
 	title, _ := cmd.Flags().GetString("title")
 	tags, _ := cmd.Flags().GetStringSlice("tags")
 	notebookTitle, _ := cmd.Flags().GetString("notebook")
 	add(title, tags, notebookTitle, args, viEditor)
 }
 
-func add(title string, tags []string, notebookTitle string, args []string, editor func(text string) string){
+func add(title string, tags []string, notebookTitle string, args []string, editor func(text string) string) {
 	memo := editor("")
 
 	//All newNotes will be inserted to default notebook

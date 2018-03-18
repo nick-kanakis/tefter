@@ -27,12 +27,12 @@ func updateNotebook(args []string) {
 	}
 	notebook, err := NotebookDB.GetNotebookByTitle(args[0])
 	if err != nil {
-		log.Panicf("error msg: %v", err)
+		log.Panicf("Error while retrieving notebook by title, error msg: %v", err)
 	} else if notebook != nil {
 		notebook.Title = args[1]
 		err = NotebookDB.UpdateNotebook(notebook)
 		if err != nil {
-			log.Panicf("error msg: %v", err)
+			log.Panicf("Error while updating notebook, error msg: %v", err)
 		}
 	}
 }

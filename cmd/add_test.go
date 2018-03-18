@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"testing"
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/nicolasmanic/tefter/repository"
+	"testing"
 )
 
 func TestAddNotebookToNoteDefaultNotebook(t *testing.T) {
@@ -53,12 +53,11 @@ func TestAddNewNotebook(t *testing.T) {
 	add("noteTitle", []string{}, "New Notebook", []string{}, mockEditor)
 }
 
-
 type mockNoteDBAdd struct {
 	repository.NoteRepository
 }
 
-func (mDB mockNoteDBAdd) SaveNote(note *model.Note) (int64, error){
+func (mDB mockNoteDBAdd) SaveNote(note *model.Note) (int64, error) {
 	return 0, nil
 }
 
@@ -66,14 +65,14 @@ type mockNotebookDBAdd struct {
 	repository.NotebookRepository
 }
 
-func (mDB mockNotebookDBAdd) GetNotebookByTitle(notebookTitle string) (*model.Notebook, error){
+func (mDB mockNotebookDBAdd) GetNotebookByTitle(notebookTitle string) (*model.Notebook, error) {
 	if notebookTitle == "Existing Notebook" {
-		notebook:= model.NewNotebook(notebookTitle)
+		notebook := model.NewNotebook(notebookTitle)
 		return notebook, nil
 	}
 	return nil, nil
 }
 
-func (mDB mockNotebookDBAdd) SaveNotebook(notebook *model.Notebook) (int64, error){
+func (mDB mockNotebookDBAdd) SaveNotebook(notebook *model.Notebook) (int64, error) {
 	return 0, nil
 }
