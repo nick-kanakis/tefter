@@ -1,8 +1,9 @@
 package cmd
 
 import (
-	"github.com/nicolasmanic/tefter/model"
 	"testing"
+	"github.com/nicolasmanic/tefter/model"
+	"github.com/nicolasmanic/tefter/repository"
 )
 
 func TestAddNotebookToNoteDefaultNotebook(t *testing.T) {
@@ -18,119 +19,61 @@ func TestAddNotebookToNoteDefaultNotebook(t *testing.T) {
 	}
 }
 
-func TestAddNotebookToNoteExistingNotebook(t *testing.T) {
+func TestAddExistingNotebook(t *testing.T) {
 	oldNotebookDB := NotebookDB
-	NotebookDB = mockNotebookRepoNotebookExist{}
+	oldNoteDB := NoteDB
+	NoteDB = mockNoteDBAdd{}
+	NotebookDB = mockNotebookDBAdd{}
 	//Restore interface
 	defer func() {
 		NotebookDB = oldNotebookDB
+		NoteDB = oldNoteDB
 	}()
 
-	note := model.NewNote("title", "memo", 123, []string{})
-	err := addNotebookToNote(note, "Existing notebook")
-	if err != nil {
-		t.Errorf("Error while trying to add note to existing notebook, with msg: %v", err)
+	mockEditor := func(text string) string {
+		return text
 	}
-
-	if note.NotebookID != 2 {
-		t.Error("Error while trying to add note to existing notebook")
-	}
-
+	add("noteTitle", []string{}, "Existing Notebook", []string{}, mockEditor)
 }
 
-func TestAddNotebookToNoteNewNotebook(t *testing.T) {
+func TestAddNewNotebook(t *testing.T) {
 	oldNotebookDB := NotebookDB
-	NotebookDB = mockNotebookRepoNewNotebook{}
+	oldNoteDB := NoteDB
+	NoteDB = mockNoteDBAdd{}
+	NotebookDB = mockNotebookDBAdd{}
 	//Restore interface
 	defer func() {
 		NotebookDB = oldNotebookDB
+		NoteDB = oldNoteDB
 	}()
 
-	note := model.NewNote("title", "memo", 123, []string{})
-	err := addNotebookToNote(note, "New notebook")
-	if err != nil {
-		t.Errorf("Error while trying to add note to a new notebook, with msg: %v", err)
+	mockEditor := func(text string) string {
+		return text
 	}
+	add("noteTitle", []string{}, "New Notebook", []string{}, mockEditor)
+}
 
-	if note.NotebookID != 2 {
-		t.Error("Error while trying to add note to a new notebook")
+
+type mockNoteDBAdd struct {
+	repository.NoteRepository
+}
+
+func (mDB mockNoteDBAdd) SaveNote(note *model.Note) (int64, error){
+	return 0, nil
+}
+
+type mockNotebookDBAdd struct {
+	repository.NotebookRepository
+}
+
+func (mDB mockNotebookDBAdd) GetNotebookByTitle(notebookTitle string) (*model.Notebook, error){
+	if notebookTitle == "Existing Notebook" {
+		notebook:= model.NewNotebook(notebookTitle)
+		return notebook, nil
 	}
-}
-
-type mockNotebookRepoNotebookExist struct{}
-
-func (mockNotebookRepoNotebookExist) SaveNotebook(notebook *model.Notebook) (int64, error) {
-	panic("not implemented")
-}
-
-func (mockNotebookRepoNotebookExist) GetNotebooks(notebooksIDs []int64) ([]*model.Notebook, error) {
-	panic("not implemented")
-}
-
-func (mockNotebookRepoNotebookExist) GetNotebook(notebooksID int64) (*model.Notebook, error) {
-	panic("not implemented")
-}
-
-func (mockNotebookRepoNotebookExist) GetNotebookByTitle(notebooksTitle string) (*model.Notebook, error) {
-	notebook := model.NewNotebook("existing Notebook")
-	notebook.ID = 2
-	return notebook, nil
-}
-
-func (mockNotebookRepoNotebookExist) UpdateNotebook(notebook *model.Notebook) error {
-	panic("not implemented")
-}
-
-func (mockNotebookRepoNotebookExist) DeleteNotebooks(notebooksIDs []int64) error {
-	panic("not implemented")
-}
-
-func (mockNotebookRepoNotebookExist) DeleteNotebook(notebooksID int64) error {
-	panic("not implemented")
-}
-
-func (mockNotebookRepoNotebookExist) GetAllNotebooksTitle() (map[int64]string, error) {
-	panic("not implemented")
-}
-
-func (mockNotebookRepoNotebookExist) CloseDB() error {
-	panic("not implemented")
-}
-
-type mockNotebookRepoNewNotebook struct{}
-
-func (mockNotebookRepoNewNotebook) SaveNotebook(notebook *model.Notebook) (int64, error) {
-	return 2, nil
-}
-
-func (mockNotebookRepoNewNotebook) GetNotebooks(notebooksIDs []int64) ([]*model.Notebook, error) {
-	panic("not implemented")
-}
-
-func (mockNotebookRepoNewNotebook) GetNotebook(notebooksID int64) (*model.Notebook, error) {
-	panic("not implemented")
-}
-
-func (mockNotebookRepoNewNotebook) GetNotebookByTitle(notebooksTitle string) (*model.Notebook, error) {
 	return nil, nil
 }
 
-func (mockNotebookRepoNewNotebook) UpdateNotebook(notebook *model.Notebook) error {
-	panic("not implemented")
-}
-
-func (mockNotebookRepoNewNotebook) DeleteNotebooks(notebooksIDs []int64) error {
-	panic("not implemented")
-}
-
-func (mockNotebookRepoNewNotebook) DeleteNotebook(notebooksID int64) error {
-	panic("not implemented")
-}
-
-func (mockNotebookRepoNewNotebook) GetAllNotebooksTitle() (map[int64]string, error) {
-	panic("not implemented")
-}
-
-func (mockNotebookRepoNewNotebook) CloseDB() error {
-	panic("not implemented")
+func (mDB mockNotebookDBAdd) SaveNotebook(notebook *model.Notebook) (int64, error){
+	return 0, nil
 }
