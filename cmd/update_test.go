@@ -28,7 +28,7 @@ type mockNoteDBUpdate struct {
 }
 
 func (mDB mockNoteDBUpdate) GetNote(noteID int64) (*model.Note, error) {
-	note := model.NewNote("testTitle4", "testMemo", DEFAULT_NOTEBOOK_ID, []string{})
+	note := model.NewNote("testTitle4", "testMemo", repository.DEFAULT_NOTEBOOK_ID, []string{})
 	note.ID = 2
 	return note, nil
 }

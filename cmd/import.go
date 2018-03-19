@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"github.com/nicolasmanic/tefter/model"
+	"github.com/nicolasmanic/tefter/repository"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"log"
@@ -33,7 +34,7 @@ func importNotes(args []string) {
 	json.Unmarshal(raw, &jsonNotes)
 
 	for _, jsonNote := range jsonNotes {
-		note := model.NewNote(jsonNote.Title, jsonNote.Memo, DEFAULT_NOTEBOOK_ID, jsonNote.Tags)
+		note := model.NewNote(jsonNote.Title, jsonNote.Memo, repository.DEFAULT_NOTEBOOK_ID, jsonNote.Tags)
 		addNotebookToNote(note, jsonNote.NotebookTitle)
 		NoteDB.SaveNote(note)
 	}

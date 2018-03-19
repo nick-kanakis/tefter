@@ -14,7 +14,7 @@ func TestAddNotebookToNoteDefaultNotebook(t *testing.T) {
 		t.Errorf("Error while trying to add note to default notebook, with msg: %v", err)
 	}
 
-	if note.NotebookID != DEFAULT_NOTEBOOK_ID {
+	if note.NotebookID != repository.DEFAULT_NOTEBOOK_ID {
 		t.Error("Error while trying to add note to default notebook")
 	}
 }

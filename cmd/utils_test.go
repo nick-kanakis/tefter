@@ -115,9 +115,9 @@ type mockNoteDBUtils struct {
 }
 
 func (mDB mockNoteDBUtils) GetNotesByTag(tags []string) ([]*model.Note, error) {
-	note1 := model.NewNote("testTitle", "testMemo", DEFAULT_NOTEBOOK_ID, []string{})
+	note1 := model.NewNote("testTitle", "testMemo", repository.DEFAULT_NOTEBOOK_ID, []string{})
 	note1.ID = 1
-	note2 := model.NewNote("testTitle2", "testMemo2", DEFAULT_NOTEBOOK_ID, []string{})
+	note2 := model.NewNote("testTitle2", "testMemo2", repository.DEFAULT_NOTEBOOK_ID, []string{})
 	note2.ID = 2
 	return []*model.Note{note1, note2}, nil
 }
@@ -132,7 +132,7 @@ func (mDB mockNotebookDBUtils) GetNotebookByTitle(notebooksTitle string) (*model
 }
 
 func (mDB mockNoteDBUtils) GetNotes(noteIDs []int64) ([]*model.Note, error) {
-	note := model.NewNote("testTitle4", "testMemo", DEFAULT_NOTEBOOK_ID, []string{})
+	note := model.NewNote("testTitle4", "testMemo", repository.DEFAULT_NOTEBOOK_ID, []string{})
 	note.ID = 4
 	return []*model.Note{note}, nil
 }

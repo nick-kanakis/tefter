@@ -8,7 +8,9 @@ import (
 )
 
 var (
-	NoteDB     repository.NoteRepository
+	//NoteDB exposed the available DB actions for notes
+	NoteDB repository.NoteRepository
+	//NotebookDB exposed the available DB actions for notebooks.
 	NotebookDB repository.NotebookRepository
 
 	rootCmd = &cobra.Command{

@@ -19,9 +19,9 @@ func TestExportImport(t *testing.T) {
 		os.Remove("notes.json")
 	}()
 
-	note1 := model.NewNote("testTitle", "testMemo", DEFAULT_NOTEBOOK_ID, []string{})
+	note1 := model.NewNote("testTitle", "testMemo", repository.DEFAULT_NOTEBOOK_ID, []string{})
 	note1.ID = 1
-	note2 := model.NewNote("testTitle2", "testMemo2", DEFAULT_NOTEBOOK_ID, []string{})
+	note2 := model.NewNote("testTitle2", "testMemo2", repository.DEFAULT_NOTEBOOK_ID, []string{})
 	note2.ID = 2
 	notes := []*model.Note{note1, note2}
 	export2JSON(notes)

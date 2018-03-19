@@ -2,11 +2,10 @@ package cmd
 
 import (
 	"github.com/nicolasmanic/tefter/model"
+	"github.com/nicolasmanic/tefter/repository"
 	"github.com/spf13/cobra"
 	"log"
 )
-
-const DEFAULT_NOTEBOOK_ID = 1
 
 var addNoteCmd = &cobra.Command{
 	Use:     "add",
@@ -36,7 +35,7 @@ func add(title string, tags []string, notebookTitle string, args []string, edito
 
 	//All newNotes will be inserted to default notebook
 	//In next steps the notebook may change see addNotebookToNote for more.
-	note := model.NewNote(title, memo, DEFAULT_NOTEBOOK_ID, tags)
+	note := model.NewNote(title, memo, repository.DEFAULT_NOTEBOOK_ID, tags)
 	err := addNotebookToNote(note, notebookTitle)
 	if err != nil {
 		log.Panicf("Error whole finding corresponding notebook for note, error msg: %v", err)
@@ -53,7 +52,7 @@ func add(title string, tags []string, notebookTitle string, args []string, edito
 //If notebookTitle does not exists notebook will be created and note will be there.
 func addNotebookToNote(note *model.Note, notebookTitle string) error {
 	if notebookTitle == "" {
-		note.NotebookID = DEFAULT_NOTEBOOK_ID
+		note.NotebookID = repository.DEFAULT_NOTEBOOK_ID
 		return nil
 	}
 

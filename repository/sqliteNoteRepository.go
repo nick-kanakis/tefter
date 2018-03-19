@@ -7,7 +7,9 @@ import (
 	"time"
 )
 
-const DEFAULT_NOTEPAD_ID = 1
+//DEFAULT_NOTEBOOK_ID is always set to 1. It defines the default notebook that is present at the DB. This notebook
+//should never be deleted.
+const DEFAULT_NOTEBOOK_ID = 1
 
 type sqliteNoteRepository struct {
 	*sqlx.DB
@@ -38,7 +40,7 @@ func (noteRepo *sqliteNoteRepository) SaveNote(note *model.Note) (noteID int64, 
 	}
 	//If notebook id is 0 set it to the default notebook.
 	if note.NotebookID == 0 {
-		note.NotebookID = DEFAULT_NOTEPAD_ID
+		note.NotebookID = DEFAULT_NOTEBOOK_ID
 	}
 
 	tx, err := noteRepo.Beginx()
