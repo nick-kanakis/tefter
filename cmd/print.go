@@ -1,10 +1,10 @@
 package cmd
 
 import (
-	"log"
 	"fmt"
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/spf13/cobra"
+	"log"
 )
 
 var printCmd = &cobra.Command{
