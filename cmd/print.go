@@ -1,10 +1,12 @@
 package cmd
 
 import (
-	"fmt"
+	"log"
+	"strings"
+
+	"github.com/marcusolsson/tui-go"
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/spf13/cobra"
-	"log"
 )
 
 var printCmd = &cobra.Command{
@@ -14,7 +16,8 @@ var printCmd = &cobra.Command{
 		" 1) Give a comma separated list of note ids" +
 		" 2) Give a comma separated list of notebook titles" +
 		" 3) Give a comma separated list of tags," +
-		" 4) If -a or --all flag is set all notes will be printed",
+		" 4) If -a or --all flag is set all notes will be printed" +
+		"Press Esc to exit print mode",
 	Example: "print -i 1,2,... -n notebook1,notebook2,... -t tag1,tag2,... ",
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -25,6 +28,7 @@ var printCmd = &cobra.Command{
 
 		notes := collectNotes(ids, notebookTitles, tags, printAll)
 		printNotes2Terminal(noteMap2Slice(notes))
+		//print2()
 	},
 }
 
@@ -36,17 +40,59 @@ func init() {
 	printCmd.Flags().BoolP("all", "a", false, "Print all notes")
 }
 
-//TODO: better visualization of data
 func printNotes2Terminal(notes []*model.Note) {
 	notebookTitlesMap, err := NotebookDB.GetAllNotebooksTitle()
 	if err != nil {
 		log.Panicf("Error while retrieving notebook by title, error msg: %v", err)
 	}
+
+	notesInfo := tui.NewTable(0, 0)
+	notesInfo.SetColumnStretch(0, 1)
+	notesInfo.SetColumnStretch(1, 2)
+	notesInfo.SetColumnStretch(2, 1)
+	notesInfo.SetFocused(true)
+
 	for _, note := range notes {
-		fmt.Println("------------------------------")
-		fmt.Printf("ID: %v	title: %v	Notebook: %v \n", note.ID, note.Title, notebookTitlesMap[note.NotebookID])
-		fmt.Printf("tags: %v \n", note.Tags)
-		fmt.Println(note.Memo)
-		fmt.Printf("Created: %v	Updated: %v\n", note.Created, note.LastUpdated)
+		notesInfo.AppendRow(
+			//Notebook title
+			tui.NewLabel(notebookTitlesMap[note.NotebookID]),
+			//Note title
+			tui.NewLabel(note.Title),
+			//Note tags
+			tui.NewLabel(strings.Join(tagMap2Slice(note.Tags), ",")),
+		)
+	}
+	memo := tui.NewLabel("")
+	memo.SetSizePolicy(tui.Expanding, tui.Expanding)
+
+	var created = tui.NewLabel("")
+	var lastUpdated = tui.NewLabel("")
+
+	dates := tui.NewTable(0, 0)
+	dates.AppendRow(tui.NewLabel("Created:"), created, tui.NewLabel("Last Updated:"), lastUpdated)
+	dates.SetSizePolicy(tui.Expanding, tui.Minimum)
+
+	mainPart := tui.NewVBox(memo, dates)
+	mainPart.SetSizePolicy(tui.Expanding, tui.Expanding)
+
+	notesInfo.OnSelectionChanged(func(t *tui.Table) {
+		n := notes[t.Selected()]
+		created.SetText(n.Created.Format("Jan 2 2006 15:04"))
+		lastUpdated.SetText(n.LastUpdated.Format("Jan 2 2006 15:04"))
+		memo.SetText(n.Memo)
+	})
+	notesInfo.Select(0)
+
+	root := tui.NewVBox(notesInfo, tui.NewLabel(""), mainPart)
+
+	ui, err := tui.New(root)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ui.SetKeybinding("Esc", func() { ui.Quit() })
+
+	if err := ui.Run(); err != nil {
+		log.Fatal(err)
 	}
 }
