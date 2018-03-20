@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	"testing"
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/nicolasmanic/tefter/repository"
-	"testing"
 )
 
 func TestSearch(t *testing.T) {
@@ -18,23 +18,7 @@ func TestSearch(t *testing.T) {
 			t.Error("SearchNotesByKeyword was not called correctly")
 		}
 	}
-	search([]string{"keyword"}, mockOutput)
-}
-
-func TestSearchEmptyKeyword(t *testing.T) {
-	oldNoteDB := NoteDB
-	NoteDB = mockNoteDBSearch{}
-	//Restore interface
-	defer func() {
-		NoteDB = oldNoteDB
-	}()
-
-	mockOutput := func(notes []*model.Note) {
-		if len(notes) != 1 || notes[0].ID != 1 {
-			t.Error("GetNotes was not called correctly")
-		}
-	}
-	search([]string{}, mockOutput)
+	search("keyword", mockOutput)
 }
 
 type mockNoteDBSearch struct {

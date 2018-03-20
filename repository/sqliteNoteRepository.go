@@ -252,6 +252,18 @@ func (noteRepo *sqliteNoteRepository) SearchNotesByKeyword(keyword string) (note
 
 	err = noteRepo.Select(&notes, query, []interface{}{keyword}...)
 	checkError(err)
+	selectTagStmt, err := noteRepo.Preparex("SELECT tag FROM note_tag WHERE note_id = ?")
+	checkError(err)
+
+	for _, note := range notes {
+		tags := []string{}
+		err = selectTagStmt.Select(&tags, note.ID)
+		checkError(err)
+		note.Tags = make(map[string]bool)
+		for _, tag := range tags {
+			note.Tags[tag] = true
+		}
+	}
 	return notes, err
 }
 

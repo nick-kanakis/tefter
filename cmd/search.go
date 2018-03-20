@@ -10,7 +10,7 @@ var searchCmd = &cobra.Command{
 	Use:   "search",
 	Short: "Search notes given a keyword",
 	Long:  "Keyword is searched against title and content of the note, if no keyword is given all notes will be printed",
-	Args:  cobra.ExactArgs(1),
+	Example: "search myKeyword",
 	Run:   searchWrapper,
 }
 
@@ -19,14 +19,14 @@ func init() {
 }
 
 func searchWrapper(cmd *cobra.Command, args []string) {
-	search(args, printNotes2Terminal)
-}
-
-func search(args []string, output func(notes []*model.Note)) {
 	keyword := ""
 	if len(args) > 0 {
 		keyword = args[0]
 	}
+	search(keyword, printNotes2Terminal)
+}
+
+func search(keyword string, output func(notes []*model.Note)) {
 	var notes []*model.Note
 	var err error
 	if len(keyword) == 0 {

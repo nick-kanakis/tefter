@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"testing"
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/nicolasmanic/tefter/repository"
-	"testing"
 )
 
 func TestUpdate(t *testing.T) {
@@ -21,6 +21,27 @@ func TestUpdate(t *testing.T) {
 		return text
 	}
 	update(1, "NewTitle", []string{}, "notebook", mockEditor)
+}
+
+func TestConstructUpdatedNoteAddRemoveTags(t *testing.T) {
+	oldNotebookDB := NotebookDB
+	NotebookDB = mockNotebookDBUpdate{}
+	//Restore interface
+	defer func() {
+		NotebookDB = oldNotebookDB
+	}()
+	mockEditor := func(text string) string {
+		return text
+	}
+	note := model.NewNote("testTitle4", "testMemo", repository.DEFAULT_NOTEBOOK_ID, []string{"tag1","tag2"})
+	constructUpdatedNote(note,"","",[]string{"tag3","-tag1"}, mockEditor)
+	
+	if len(note.Tags) != 2{
+		t.Error("Failed adding/removing tags")
+	}
+	if !(note.Tags["tag3"]) || !(note.Tags["tag2"]){
+		t.Error("Failed adding/removing tags")
+	}
 }
 
 type mockNoteDBUpdate struct {

@@ -26,7 +26,7 @@ var printCmd = &cobra.Command{
 		tags, _ := cmd.Flags().GetStringSlice("tags")
 		printAll, _ := cmd.Flags().GetBool("all")
 
-		notes := collectNotes(ids, notebookTitles, tags, printAll)
+		notes := collectNotesFromDB(ids, notebookTitles, tags, printAll)
 		printNotes2Terminal(noteMap2Slice(notes))
 		//print2()
 	},
@@ -41,6 +41,9 @@ func init() {
 }
 
 func printNotes2Terminal(notes []*model.Note) {
+	if len(notes) <= 0 {
+		return
+	}
 	notebookTitlesMap, err := NotebookDB.GetAllNotebooksTitle()
 	if err != nil {
 		log.Panicf("Error while retrieving notebook by title, error msg: %v", err)
