@@ -22,12 +22,13 @@ type jsonNote struct {
 var exportCmd = &cobra.Command{
 	Use:   "export",
 	Short: "Exports notes to json format",
-	Long: "There are 4 ways to export a set of notes" +
-		" 1) Give a comma separated list of note ids" +
-		" 2) Give a comma separated list of notebook titles" +
-		" 3) Give a comma separated list of tags," +
-		" 4) If -a or --all flag is set all notes will be printed",
-	Example: "export -i 1,2,... -n notebook1,notebook2,... -t tag1,tag2,... ",
+	Long: "There are 4 ways to export a set of notes\n" +
+		" 1) Give a comma separated list of note ids\n" +
+		" 2) Give a comma separated list of notebook titles\n" +
+		" 3) Give a comma separated list of tags,\n" +
+		" 4) If -a or --all flag is set all notes will be printed\n",
+	Example: "export -i 1,2,... -n notebook1,notebook2,... -t tag1,tag2,...\n "+
+			 "export -a",
 	Run:     export,
 }
 
@@ -44,7 +45,7 @@ func export(cmd *cobra.Command, args []string) {
 	notebookTitles, _ := cmd.Flags().GetStringSlice("notebook")
 	tags, _ := cmd.Flags().GetStringSlice("tags")
 	all, _ := cmd.Flags().GetBool("all")
-	notes := collectNotes(ids, notebookTitles, tags, all)
+	notes := collectNotesFromDB(ids, notebookTitles, tags, all)
 	export2JSON(noteMap2Slice(notes))
 }
 

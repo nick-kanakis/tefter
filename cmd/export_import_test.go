@@ -25,7 +25,7 @@ func TestExportImport(t *testing.T) {
 	note2.ID = 2
 	notes := []*model.Note{note1, note2}
 	export2JSON(notes)
-	importNotes([]string{"notes.json"})
+	importNotes("notes.json")
 }
 
 func TestImportNoArguments(t *testing.T) {
@@ -34,7 +34,7 @@ func TestImportNoArguments(t *testing.T) {
 			t.Error("Calling import notes with no arguments should cause panic")
 		}
 	}()
-	importNotes([]string{})
+	importNotesWrapper(nil, []string{})
 }
 
 type mockNotebookDBExportImport struct {
