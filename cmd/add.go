@@ -8,16 +8,16 @@ import (
 )
 
 var addNoteCmd = &cobra.Command{
-	Use:     "add",
-	Short:   "Create a new note",
-	Long:   "A note consist of 4 parts:" +
-			" 1) Title, is set through -t flag (optional) \n"+
-			" 2) Tags, is set through --tags flag (optional) \n"+
-			" 3) Notebook title, if notebook does not exist it will be created,\n" + 
-			"    is set through -n flag (optional), if not set note will be inserted to the default notebook \n"+
-			" 4) Memo, is inserted via VI editor\n",
+	Use:   "add",
+	Short: "Create a new note",
+	Long: "A note consist of 4 parts:" +
+		" 1) Title, is set through -t flag (optional) \n" +
+		" 2) Tags, is set through --tags flag (optional) \n" +
+		" 3) Notebook title, if notebook does not exist it will be created,\n" +
+		"    is set through -n flag (optional), if not set note will be inserted to the default notebook \n" +
+		" 4) Memo, is inserted via VI editor\n",
 	Example: "add -t title_1 --tags tag1,tag2 -n notebook_1",
-	Run: addWrapper,
+	Run:     addWrapper,
 }
 
 func init() {

@@ -1,14 +1,14 @@
 package cmd
 
 import (
-	"log"
 	"github.com/spf13/cobra"
+	"log"
 )
 
 var updateNotebookCmd = &cobra.Command{
 	Use:     "updateNotebook",
 	Short:   "Set new title to an existing notebook",
-	Long: "Update requires 2 arguments first the old notebook title, and the new title",
+	Long:    "Update requires 2 arguments first the old notebook title, and the new title",
 	Example: "update 'Old Notebook Title' 'New Notebook Title'",
 	Args:    cobra.ExactArgs(2),
 	Run:     updateNotebookWrapper,

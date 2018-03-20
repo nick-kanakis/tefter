@@ -13,9 +13,9 @@ func TestDeleteWrapper(t *testing.T) {
 		NoteDB = oldNoteDB
 	}()
 
-	deleteWrapper(nil,[]string{"1", "2"})
+	deleteWrapper(nil, []string{"1", "2"})
 	//empty id slice should not cause any problem
-	deleteWrapper(nil,[]string{})
+	deleteWrapper(nil, []string{})
 }
 
 type mockNoteDBDelete struct {

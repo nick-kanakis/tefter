@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"testing"
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/nicolasmanic/tefter/repository"
+	"testing"
 )
 
 func TestSearch(t *testing.T) {

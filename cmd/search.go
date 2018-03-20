@@ -7,11 +7,11 @@ import (
 )
 
 var searchCmd = &cobra.Command{
-	Use:   "search",
-	Short: "Search notes given a keyword",
-	Long:  "Keyword is searched against title and content of the note, if no keyword is given all notes will be printed",
+	Use:     "search",
+	Short:   "Search notes given a keyword",
+	Long:    "Keyword is searched against title and content of the note, if no keyword is given all notes will be printed",
 	Example: "search myKeyword",
-	Run:   searchWrapper,
+	Run:     searchWrapper,
 }
 
 func init() {

@@ -10,10 +10,10 @@ import (
 )
 
 var importCmd = &cobra.Command{
-	Use:     "import",
-	Short:   "Import notes from json file",
-	Long: "Provide a path of a .json file be imported.\n"+
-		  "[{\n\t'title':'',\n\t'memo':' ',\n\t'created':'2018-03-19T18:58:29.5553579+02:00',\n\t'updated':'2018-03-19T18:58:29.5553579+02:00',\n\t'tags':[tag1, tag2],\n\t'notebook_title':''\n}]",
+	Use:   "import",
+	Short: "Import notes from json file",
+	Long: "Provide a path of a .json file be imported.\n" +
+		"[{\n\t'title':'',\n\t'memo':' ',\n\t'created':'2018-03-19T18:58:29.5553579+02:00',\n\t'updated':'2018-03-19T18:58:29.5553579+02:00',\n\t'tags':[tag1, tag2],\n\t'notebook_title':''\n}]",
 	Args:    cobra.ExactArgs(1),
 	Example: "import /c/documents/notes.json ",
 	Run:     importNotesWrapper,

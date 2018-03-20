@@ -27,9 +27,9 @@ var exportCmd = &cobra.Command{
 		" 2) Give a comma separated list of notebook titles\n" +
 		" 3) Give a comma separated list of tags,\n" +
 		" 4) If -a or --all flag is set all notes will be printed\n",
-	Example: "export -i 1,2,... -n notebook1,notebook2,... -t tag1,tag2,...\n "+
-			 "export -a",
-	Run:     export,
+	Example: "export -i 1,2,... -n notebook1,notebook2,... -t tag1,tag2,...\n " +
+		"export -a",
+	Run: export,
 }
 
 func init() {

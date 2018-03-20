@@ -9,7 +9,7 @@ import (
 var deleteNoteCmd = &cobra.Command{
 	Use:     "delete",
 	Short:   "Delete one or more notes based on ID(s)",
-	Args: cobra.MinimumNArgs(1),
+	Args:    cobra.MinimumNArgs(1),
 	Example: "delete 1,2,...",
 	Run:     deleteWrapper,
 }
@@ -19,10 +19,10 @@ func init() {
 }
 
 func deleteWrapper(cmd *cobra.Command, args []string) {
-	var ids = make([]int64,0, len(args))
-	for _ , argument := range args{
-		id, err:= strconv.ParseInt(argument, 10, 64)
-		if err!= nil{
+	var ids = make([]int64, 0, len(args))
+	for _, argument := range args {
+		id, err := strconv.ParseInt(argument, 10, 64)
+		if err != nil {
 			log.Panicf("Could note transform input to id for argument %v", argument)
 		}
 		ids = append(ids, id)
