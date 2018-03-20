@@ -49,17 +49,22 @@ func viEditor(text string) string {
 	return string(memo)
 }
 
-func int2int64(input []int) []int64 {
+func int64Slice(input []int) []int64 {
 	var result = make([]int64, 0, len(input))
 	for _, tmp := range input {
-		result = append(result, int64(tmp))
+		result = append(result, int2int64(tmp))
 	}
 	return result
 }
 
-func collectNotes(ids []int, notebookTitles, tags []string, printAll bool) map[int64]*model.Note {
+func int2int64(input int) int64 {
+	return int64(input)
+}
+
+func collectNotesFromDB(ids []int, notebookTitles, tags []string, getAll bool) map[int64]*model.Note {
 	var notesMap = make(map[int64]*model.Note, 0)
-	if printAll {
+	if getAll {
+		//Get all notes in the DB
 		allNotes, err := NoteDB.GetNotes([]int64{})
 		if err != nil {
 			log.Panicf("Error while retrieving notes by id , error msg: %v", err)
@@ -69,19 +74,18 @@ func collectNotes(ids []int, notebookTitles, tags []string, printAll bool) map[i
 		}
 		return notesMap
 	}
-	//Add notes based on id
 	if len(ids) > 0 {
-		idNotes, err := NoteDB.GetNotes(int2int64(ids))
+		//Add notes based on ids
+		idNotes, err := NoteDB.GetNotes(int64Slice(ids))
 		if err != nil {
 			log.Panicf("Error while retrieving notes by id, error msg: %v", err)
 		}
 		for _, note := range idNotes {
 			notesMap[note.ID] = note
 		}
-
 	}
 	if len(notebookTitles) > 0 {
-		//Add notes based on notebook
+		//Get notes based on notebook titles
 		for _, notebookTitle := range notebookTitles {
 			notebook, err := NotebookDB.GetNotebookByTitle(notebookTitle)
 			if err != nil {
@@ -94,6 +98,7 @@ func collectNotes(ids []int, notebookTitles, tags []string, printAll bool) map[i
 		}
 	}
 	if len(tags) > 0 {
+		//Get notes based on tags
 		tagNotes, err := NoteDB.GetNotesByTag(tags)
 		if err != nil {
 			log.Panicf("Error while retrieving notes by tag, error msg: %v", err)

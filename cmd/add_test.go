@@ -33,7 +33,7 @@ func TestAddExistingNotebook(t *testing.T) {
 	mockEditor := func(text string) string {
 		return text
 	}
-	add("noteTitle", []string{}, "Existing Notebook", []string{}, mockEditor)
+	add("noteTitle", []string{}, "Existing Notebook", mockEditor)
 }
 
 func TestAddNewNotebook(t *testing.T) {
@@ -50,7 +50,7 @@ func TestAddNewNotebook(t *testing.T) {
 	mockEditor := func(text string) string {
 		return text
 	}
-	add("noteTitle", []string{}, "New Notebook", []string{}, mockEditor)
+	add("noteTitle", []string{}, "New Notebook", mockEditor)
 }
 
 type mockNoteDBAdd struct {

@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestDelete(t *testing.T) {
+func TestDeleteWrapper(t *testing.T) {
 	oldNoteDB := NoteDB
 	NoteDB = mockNoteDBDelete{}
 	//Restore interface
@@ -13,9 +13,9 @@ func TestDelete(t *testing.T) {
 		NoteDB = oldNoteDB
 	}()
 
-	delete([]int{1, 2, 3}, []string{})
+	deleteWrapper(nil,[]string{"1", "2"})
 	//empty id slice should not cause any problem
-	delete([]int{}, []string{})
+	deleteWrapper(nil,[]string{})
 }
 
 type mockNoteDBDelete struct {

@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestInt2int64(t *testing.T) {
+func TestInt64Slice(t *testing.T) {
 	tests := []struct {
 		input    []int
 		expected []int64
@@ -27,7 +27,7 @@ func TestInt2int64(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := int2int64(test.input)
+		result := int64Slice(test.input)
 		if !reflect.DeepEqual(result, test.expected) {
 			t.Errorf("Expected: %v, got: %v", test.expected, result)
 		}
@@ -85,7 +85,7 @@ func TestTagMap2Slice(t *testing.T) {
 	}
 }
 
-func TestCollectNotes(t *testing.T) {
+func TestCollectNotesFromDB(t *testing.T) {
 	oldNotebookDB := NotebookDB
 	oldNoteDB := NoteDB
 	NoteDB = mockNoteDBUtils{}
@@ -96,11 +96,11 @@ func TestCollectNotes(t *testing.T) {
 		NoteDB = oldNoteDB
 	}()
 
-	noteMap := collectNotes([]int{1}, []string{"notebookTitle"}, []string{"testTag"}, false)
+	noteMap := collectNotesFromDB([]int{1}, []string{"notebookTitle"}, []string{"testTag"}, false)
 	if len(noteMap) != 4 {
 		t.Error("Error while collecting notes per id, notebook title and tags")
 	}
-	allNotes := collectNotes([]int{}, []string{}, []string{}, true)
+	allNotes := collectNotesFromDB([]int{}, []string{}, []string{}, true)
 	if len(allNotes) != 1 {
 		t.Error("Error while collectingall notes")
 	}
