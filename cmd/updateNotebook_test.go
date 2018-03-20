@@ -14,7 +14,7 @@ func TestUpdateNotebook(t *testing.T) {
 	defer func() {
 		NotebookDB = oldNotebookDB
 	}()
-	updateNotebook([]string{"notebookTitle", "newTitle"})
+	updateNotebook("notebookTitle", "newTitle")
 }
 
 func TestUpdateNotebookShouldPanic(t *testing.T) {
@@ -26,7 +26,7 @@ func TestUpdateNotebookShouldPanic(t *testing.T) {
 			t.Errorf("Empty arguments should cause the update cmd to panic")
 		}
 	}()
-	updateNotebook([]string{})
+	updateNotebookWrapper(nil, []string{})
 }
 
 type mockNotebookDBUpdateNotebook struct {
