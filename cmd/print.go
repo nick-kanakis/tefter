@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"log"
+	"strconv"
 	"strings"
-
 	"github.com/marcusolsson/tui-go"
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/spf13/cobra"
@@ -49,14 +49,24 @@ func printNotes2Terminal(notes []*model.Note) {
 		log.Panicf("Error while retrieving notebook by title, error msg: %v", err)
 	}
 
+	notesInfoHeader := tui.NewTable(0, 0)
+	notesInfoHeader.SetColumnStretch(0, 1)
+	notesInfoHeader.SetColumnStretch(1, 2)
+	notesInfoHeader.SetColumnStretch(2, 3)
+	notesInfoHeader.SetColumnStretch(3, 2)
+	notesInfoHeader.AppendRow(tui.NewLabel("ID"), tui.NewLabel("Notebook Title"),tui.NewLabel("Note Title"),tui.NewLabel("Tags"))
+
 	notesInfo := tui.NewTable(0, 0)
 	notesInfo.SetColumnStretch(0, 1)
 	notesInfo.SetColumnStretch(1, 2)
-	notesInfo.SetColumnStretch(2, 1)
+	notesInfo.SetColumnStretch(2, 3)
+	notesInfo.SetColumnStretch(3, 2)
 	notesInfo.SetFocused(true)
 
 	for _, note := range notes {
 		notesInfo.AppendRow(
+			//Note ID
+			tui.NewLabel(strconv.Itoa(int(note.ID))),
 			//Notebook title
 			tui.NewLabel(notebookTitlesMap[note.NotebookID]),
 			//Note title
@@ -86,7 +96,7 @@ func printNotes2Terminal(notes []*model.Note) {
 	})
 	notesInfo.Select(0)
 
-	root := tui.NewVBox(notesInfo, tui.NewLabel(""), mainPart)
+	root := tui.NewVBox(notesInfoHeader, notesInfo, tui.NewLabel(""), mainPart)
 
 	ui, err := tui.New(root)
 	if err != nil {
