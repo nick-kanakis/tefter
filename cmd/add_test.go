@@ -75,7 +75,7 @@ func TestAddJSONNote(t *testing.T) {
 		NotebookTitle: "notebook",
 	}
 	if err := addJSONNote(jNote); err != nil {
-		t.Errorf("Failed saving JSONNote, error msg:%", err)
+		t.Errorf("Failed saving JSONNote, error msg: %v", err)
 	}
 }
 
