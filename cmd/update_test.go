@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/nicolasmanic/tefter/repository"
 	"testing"
@@ -41,6 +42,32 @@ func TestConstructUpdatedNoteAddRemoveTags(t *testing.T) {
 	}
 	if !(note.Tags["tag3"]) || !(note.Tags["tag2"]) {
 		t.Error("Failed adding/removing tags")
+	}
+}
+
+func TestUpdateJSONNote(t *testing.T) {
+	oldNotebookDB := NotebookDB
+	oldNoteDB := NoteDB
+	NoteDB = mockNoteDBUpdate{}
+	NotebookDB = mockNotebookDBUpdate{}
+	//Restore interface
+	defer func() {
+		NotebookDB = oldNotebookDB
+		NoteDB = oldNoteDB
+	}()
+
+	jNote := &jsonNote{
+		ID: 1,
+		Title: "NewTitle",
+		Memo: "My Memo",
+		NotebookTitle: "Notebook title",
+		Created: time.Now(),
+		LastUpdated: time.Now(),
+		Tags: []string{"tag1","tag2"},
+	}
+
+	if err := updateJSONNote(jNote); err !=nil{
+		t.Errorf("Error while updating JSON note, error msg: %v", err)
 	}
 }
 

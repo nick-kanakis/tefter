@@ -4,6 +4,7 @@ import (
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/nicolasmanic/tefter/repository"
 	"testing"
+	"time"
 )
 
 func TestAddNotebookToNoteDefaultNotebook(t *testing.T) {
@@ -51,6 +52,31 @@ func TestAddNewNotebook(t *testing.T) {
 		return text
 	}
 	add("noteTitle", []string{}, "New Notebook", mockEditor)
+}
+
+func TestAddJSONNote(t *testing.T) {
+	oldNotebookDB := NotebookDB
+	oldNoteDB := NoteDB
+	NoteDB = mockNoteDBAdd{}
+	NotebookDB = mockNotebookDBAdd{}
+	//Restore interface
+	defer func() {
+		NotebookDB = oldNotebookDB
+		NoteDB = oldNoteDB
+	}()
+
+	jNote := &jsonNote{
+		ID:            1,
+		Title:         "Test Title",
+		Memo:          "Test memo",
+		Created:       time.Now(),
+		LastUpdated:   time.Now(),
+		Tags:          []string{"tag1", "tag2"},
+		NotebookTitle: "notebook",
+	}
+	if err := addJSONNote(jNote); err != nil {
+		t.Errorf("Failed saving JSONNote, error msg:%", err)
+	}
 }
 
 type mockNoteDBAdd struct {

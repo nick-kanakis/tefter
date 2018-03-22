@@ -28,7 +28,6 @@ var printCmd = &cobra.Command{
 
 		notes := collectNotesFromDB(ids, notebookTitles, tags, printAll)
 		printNotes2Terminal(noteMap2Slice(notes))
-		//print2()
 	},
 }
 

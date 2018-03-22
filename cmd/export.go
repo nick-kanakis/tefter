@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"encoding/json"
-	"github.com/nicolasmanic/tefter/model"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"log"
+	"fmt"
 	"time"
 )
 
@@ -45,14 +45,27 @@ func export(cmd *cobra.Command, args []string) {
 	notebookTitles, _ := cmd.Flags().GetStringSlice("notebook")
 	tags, _ := cmd.Flags().GetStringSlice("tags")
 	all, _ := cmd.Flags().GetBool("all")
-	notes := collectNotesFromDB(ids, notebookTitles, tags, all)
-	export2JSON(noteMap2Slice(notes))
+	jsonNotes, err:=retrieveJSONNotes(ids, notebookTitles, tags, all)
+	if err!= nil{
+		log.Panicln(err)
+	}
+	export2File(jsonNotes)
 }
 
-func export2JSON(notes []*model.Note) {
+func export2File(jsonNotes []*jsonNote){
+	marshalledNotes, err := json.Marshal(jsonNotes)
+	if err != nil {
+		log.Panicf("Error while marshalling Notes, error msg: %v", err)
+	}
+	ioutil.WriteFile("notes.json", marshalledNotes, 0644)
+}
+
+func retrieveJSONNotes(ids []int, notebookTitles, tags []string, getAll bool) ([]*jsonNote, error) {
+	notes := collectNotesFromDB(ids, notebookTitles, tags, getAll)
+
 	notebookTitlesMap, err := NotebookDB.GetAllNotebooksTitle()
 	if err != nil {
-		log.Panicf("Error while retrieving Notebooks titles, error msg: %v", err)
+		return nil, fmt.Errorf("Error while retrieving Notebooks titles, error msg: %v", err)
 	}
 	var exportedNotes []*jsonNote
 	for _, note := range notes {
@@ -67,9 +80,5 @@ func export2JSON(notes []*model.Note) {
 		}
 		exportedNotes = append(exportedNotes, exportedNote)
 	}
-	jsonNotes, err := json.Marshal(exportedNotes)
-	if err != nil {
-		log.Panicf("Error while marshalling Notes, error msg: %v", err)
-	}
-	ioutil.WriteFile("notes.json", jsonNotes, 0644)
+	return exportedNotes, nil
 }

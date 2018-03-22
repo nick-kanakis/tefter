@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/nicolasmanic/tefter/repository"
 	"github.com/spf13/cobra"
@@ -49,6 +50,20 @@ func add(title string, tags []string, notebookTitle string, editor func(text str
 	if err != nil {
 		log.Panicf("Error while saving note, error msg: %v", err)
 	}
+}
+
+func addJSONNote(jNote *jsonNote) error {
+	note := model.NewNote(jNote.Title, jNote.Memo, repository.DEFAULT_NOTEBOOK_ID, jNote.Tags)
+	err := addNotebookToNote(note, jNote.NotebookTitle)
+	if err != nil {
+		return fmt.Errorf("Error whole finding corresponding notebook for note, error msg: %v", err)
+	}
+
+	_, err = NoteDB.SaveNote(note)
+	if err != nil {
+		return fmt.Errorf("Error while saving note, error msg: %v", err)
+	}
+	return nil
 }
 
 //addNotebookToNote finds the corresponting notebook for given notebook title
