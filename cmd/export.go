@@ -5,7 +5,6 @@ import (
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"log"
-	"fmt"
 	"time"
 )
 
@@ -45,14 +44,14 @@ func export(cmd *cobra.Command, args []string) {
 	notebookTitles, _ := cmd.Flags().GetStringSlice("notebook")
 	tags, _ := cmd.Flags().GetStringSlice("tags")
 	all, _ := cmd.Flags().GetBool("all")
-	jsonNotes, err:=retrieveJSONNotes(ids, notebookTitles, tags, all)
-	if err!= nil{
+	jsonNotes, err := retrieveJSONNotes(ids, notebookTitles, tags, all)
+	if err != nil {
 		log.Panicln(err)
 	}
 	export2File(jsonNotes)
 }
 
-func export2File(jsonNotes []*jsonNote){
+func export2File(jsonNotes []*jsonNote) {
 	marshalledNotes, err := json.Marshal(jsonNotes)
 	if err != nil {
 		log.Panicf("Error while marshalling Notes, error msg: %v", err)
@@ -62,23 +61,5 @@ func export2File(jsonNotes []*jsonNote){
 
 func retrieveJSONNotes(ids []int, notebookTitles, tags []string, getAll bool) ([]*jsonNote, error) {
 	notes := collectNotesFromDB(ids, notebookTitles, tags, getAll)
-
-	notebookTitlesMap, err := NotebookDB.GetAllNotebooksTitle()
-	if err != nil {
-		return nil, fmt.Errorf("Error while retrieving Notebooks titles, error msg: %v", err)
-	}
-	var exportedNotes []*jsonNote
-	for _, note := range notes {
-		exportedNote := &jsonNote{
-			ID:            note.ID,
-			Title:         note.Title,
-			Memo:          note.Memo,
-			Created:       note.Created,
-			LastUpdated:   note.LastUpdated,
-			Tags:          tagMap2Slice(note.Tags),
-			NotebookTitle: notebookTitlesMap[note.NotebookID],
-		}
-		exportedNotes = append(exportedNotes, exportedNote)
-	}
-	return exportedNotes, nil
+	return transformNotes2JSONNotes(noteMap2Slice(notes))
 }

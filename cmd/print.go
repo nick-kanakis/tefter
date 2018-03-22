@@ -1,12 +1,11 @@
 package cmd
 
 import (
+	"github.com/marcusolsson/tui-go"
+	"github.com/spf13/cobra"
 	"log"
 	"strconv"
 	"strings"
-	"github.com/marcusolsson/tui-go"
-	"github.com/nicolasmanic/tefter/model"
-	"github.com/spf13/cobra"
 )
 
 var printCmd = &cobra.Command{
@@ -27,7 +26,11 @@ var printCmd = &cobra.Command{
 		printAll, _ := cmd.Flags().GetBool("all")
 
 		notes := collectNotesFromDB(ids, notebookTitles, tags, printAll)
-		printNotes2Terminal(noteMap2Slice(notes))
+		jNotes, err := transformNotes2JSONNotes(noteMap2Slice(notes))
+		if err != nil {
+			log.Panicln(err)
+		}
+		printNotes2Terminal(jNotes)
 	},
 }
 
@@ -39,21 +42,16 @@ func init() {
 	printCmd.Flags().BoolP("all", "a", false, "Print all notes")
 }
 
-func printNotes2Terminal(notes []*model.Note) {
-	if len(notes) <= 0 {
+func printNotes2Terminal(jNotes []*jsonNote) {
+	if len(jNotes) <= 0 {
 		return
 	}
-	notebookTitlesMap, err := NotebookDB.GetAllNotebooksTitle()
-	if err != nil {
-		log.Panicf("Error while retrieving notebook by title, error msg: %v", err)
-	}
-
 	notesInfoHeader := tui.NewTable(0, 0)
 	notesInfoHeader.SetColumnStretch(0, 1)
 	notesInfoHeader.SetColumnStretch(1, 2)
 	notesInfoHeader.SetColumnStretch(2, 3)
 	notesInfoHeader.SetColumnStretch(3, 2)
-	notesInfoHeader.AppendRow(tui.NewLabel("ID"), tui.NewLabel("Notebook Title"),tui.NewLabel("Note Title"),tui.NewLabel("Tags"))
+	notesInfoHeader.AppendRow(tui.NewLabel("ID"), tui.NewLabel("Notebook Title"), tui.NewLabel("Note Title"), tui.NewLabel("Tags"))
 
 	notesInfo := tui.NewTable(0, 0)
 	notesInfo.SetColumnStretch(0, 1)
@@ -62,16 +60,16 @@ func printNotes2Terminal(notes []*model.Note) {
 	notesInfo.SetColumnStretch(3, 2)
 	notesInfo.SetFocused(true)
 
-	for _, note := range notes {
+	for _, note := range jNotes {
 		notesInfo.AppendRow(
 			//Note ID
 			tui.NewLabel(strconv.Itoa(int(note.ID))),
 			//Notebook title
-			tui.NewLabel(notebookTitlesMap[note.NotebookID]),
+			tui.NewLabel(note.NotebookTitle),
 			//Note title
 			tui.NewLabel(note.Title),
 			//Note tags
-			tui.NewLabel(strings.Join(tagMap2Slice(note.Tags), ",")),
+			tui.NewLabel(strings.Join(note.Tags, ",")),
 		)
 	}
 	memo := tui.NewLabel("")
@@ -88,7 +86,7 @@ func printNotes2Terminal(notes []*model.Note) {
 	mainPart.SetSizePolicy(tui.Expanding, tui.Expanding)
 
 	notesInfo.OnSelectionChanged(func(t *tui.Table) {
-		n := notes[t.Selected()]
+		n := jNotes[t.Selected()]
 		created.SetText(n.Created.Format("Jan 2 2006 15:04"))
 		lastUpdated.SetText(n.LastUpdated.Format("Jan 2 2006 15:04"))
 		memo.SetText(n.Memo)

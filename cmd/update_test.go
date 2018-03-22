@@ -2,10 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"time"
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/nicolasmanic/tefter/repository"
 	"testing"
+	"time"
 )
 
 func TestUpdate(t *testing.T) {
@@ -31,11 +31,8 @@ func TestConstructUpdatedNoteAddRemoveTags(t *testing.T) {
 	defer func() {
 		NotebookDB = oldNotebookDB
 	}()
-	mockEditor := func(text string) string {
-		return text
-	}
 	note := model.NewNote("testTitle4", "testMemo", repository.DEFAULT_NOTEBOOK_ID, []string{"tag1", "tag2"})
-	constructUpdatedNote(note, "", "", []string{"tag3", "-tag1"}, mockEditor)
+	constructUpdatedNote(note, "", "", []string{"tag3", "-tag1"}, "NewMemo")
 
 	if len(note.Tags) != 2 {
 		t.Error("Failed adding/removing tags")
@@ -57,16 +54,16 @@ func TestUpdateJSONNote(t *testing.T) {
 	}()
 
 	jNote := &jsonNote{
-		ID: 1,
-		Title: "NewTitle",
-		Memo: "My Memo",
+		ID:            1,
+		Title:         "NewTitle",
+		Memo:          "My Memo",
 		NotebookTitle: "Notebook title",
-		Created: time.Now(),
-		LastUpdated: time.Now(),
-		Tags: []string{"tag1","tag2"},
+		Created:       time.Now(),
+		LastUpdated:   time.Now(),
+		Tags:          []string{"tag1", "tag2"},
 	}
 
-	if err := updateJSONNote(jNote); err !=nil{
+	if err := updateJSONNote(jNote); err != nil {
 		t.Errorf("Error while updating JSON note, error msg: %v", err)
 	}
 }

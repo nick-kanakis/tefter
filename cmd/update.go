@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/nicolasmanic/tefter/model"
+	"github.com/spf13/cobra"
 	"log"
 	"strconv"
 	"strings"
-	"github.com/nicolasmanic/tefter/model"
-	"github.com/spf13/cobra"
 )
 
 var updateCmd = &cobra.Command{
@@ -43,7 +43,8 @@ func update(id int64, title string, tags []string, notebookTitle string, editor 
 	if err != nil {
 		log.Panicf("Error while retrieving Note from DB, error msg: %v", err)
 	}
-	err = constructUpdatedNote(note, title, notebookTitle, tags, editor)
+	memo := editor(note.Memo)
+	err = constructUpdatedNote(note, title, notebookTitle, tags, memo)
 	if err != nil {
 		log.Panicf("Error while constructing updated note, error msg: %v", err)
 	}
@@ -58,10 +59,7 @@ func updateJSONNote(jNote *jsonNote) error {
 	if err != nil {
 		return fmt.Errorf("Error while retrieving Note from DB, error msg: %v", err)
 	}
-	//TODO: refactor??
-	var fakeEditor = func(i string) string{
-		return jNote.Memo};
-	err = constructUpdatedNote(note, jNote.Title, jNote.NotebookTitle, jNote.Tags, fakeEditor)
+	err = constructUpdatedNote(note, jNote.Title, jNote.NotebookTitle, jNote.Tags, jNote.Memo)
 	if err != nil {
 		return fmt.Errorf("Error while constructing updated note, error msg: %v", err)
 	}
@@ -69,12 +67,10 @@ func updateJSONNote(jNote *jsonNote) error {
 	if err != nil {
 		return fmt.Errorf("Error while updating note, error msg: %v", err)
 	}
-
 	return nil
 }
 
-func constructUpdatedNote(note *model.Note, title, notebookTitle string, tags []string, editor func(text string) string) error {
-	memo := editor(note.Memo)
+func constructUpdatedNote(note *model.Note, title, notebookTitle string, tags []string, memo string) error {
 	if title != "" {
 		note.UpdateTitle(title)
 	}

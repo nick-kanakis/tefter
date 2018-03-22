@@ -125,3 +125,26 @@ func tagMap2Slice(m map[string]bool) []string {
 	}
 	return tags
 }
+
+//TODO: Unit test
+func transformNotes2JSONNotes(notes []*model.Note) ([]*jsonNote, error) {
+	var jNotes []*jsonNote
+	notebookTitlesMap, err := NotebookDB.GetAllNotebooksTitle()
+	if err != nil {
+		return nil, fmt.Errorf("Error while retrieving Notebooks titles, error msg: %v", err)
+	}
+
+	for _, note := range notes {
+		jNote := &jsonNote{
+			ID:            note.ID,
+			Title:         note.Title,
+			Memo:          note.Memo,
+			Created:       note.Created,
+			LastUpdated:   note.LastUpdated,
+			Tags:          tagMap2Slice(note.Tags),
+			NotebookTitle: notebookTitlesMap[note.NotebookID],
+		}
+		jNotes = append(jNotes, jNote)
+	}
+	return jNotes, nil
+}

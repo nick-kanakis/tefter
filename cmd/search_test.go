@@ -7,18 +7,24 @@ import (
 )
 
 func TestSearch(t *testing.T) {
+	oldNotebookDB := NotebookDB
 	oldNoteDB := NoteDB
 	NoteDB = mockNoteDBSearch{}
-	//Restore interface
-	defer func() {
-		NoteDB = oldNoteDB
-	}()
-	mockOutput := func(notes []*model.Note) {
+	NotebookDB = mockNotebookDBSearch{}
+	originalPrintFunc := print
+	print = func(notes []*jsonNote) {
 		if len(notes) != 1 || notes[0].ID != 2 {
 			t.Error("SearchNotesByKeyword was not called correctly")
 		}
 	}
-	search("keyword", mockOutput)
+	//Restore interface
+	defer func() {
+		NotebookDB = oldNotebookDB
+		NoteDB = oldNoteDB
+		print = originalPrintFunc
+	}()
+
+	searchWrapper(nil, []string{"keyword"})
 }
 
 type mockNoteDBSearch struct {
@@ -35,4 +41,12 @@ func (mDB mockNoteDBSearch) SearchNotesByKeyword(keyword string) ([]*model.Note,
 	note := model.NewNote("testTitle2", "testMemo2", repository.DEFAULT_NOTEBOOK_ID, []string{})
 	note.ID = 2
 	return []*model.Note{note}, nil
+}
+
+type mockNotebookDBSearch struct {
+	repository.NotebookRepository
+}
+
+func (mDB mockNotebookDBSearch) GetAllNotebooksTitle() (map[int64]string, error) {
+	return map[int64]string{1: "testTitle"}, nil
 }

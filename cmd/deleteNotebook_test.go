@@ -1,12 +1,13 @@
 package cmd
 
 import (
+	"testing"
+
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/nicolasmanic/tefter/repository"
-	"testing"
 )
 
-func TestDeleteNotebookNoArguments(t *testing.T) {
+func TestDeleteNotebooksNoArguments(t *testing.T) {
 	oldNotebookDB := NotebookDB
 	NotebookDB = mockNotebookDBDelete{}
 	defer func() {
@@ -15,17 +16,17 @@ func TestDeleteNotebookNoArguments(t *testing.T) {
 			t.Errorf("Empty argument should cause the delete cmd to panic")
 		}
 	}()
-	deleteNotebook([]string{})
+	deleteNotebooksWrapper(nil, []string{})
 }
 
-func TestDeleteNotebook(t *testing.T) {
+func TestDeleteNotebooks(t *testing.T) {
 	oldNotebookDB := NotebookDB
 	NotebookDB = mockNotebookDBDelete{}
 	//Restore interface
 	defer func() {
 		NotebookDB = oldNotebookDB
 	}()
-	deleteNotebook([]string{"12"})
+	deleteNotebooks([]string{"12"})
 }
 
 type mockNotebookDBDelete struct {

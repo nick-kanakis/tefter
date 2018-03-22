@@ -18,8 +18,8 @@ func TestExportImport(t *testing.T) {
 		NoteDB = oldNoteDB
 		os.Remove("notes.json")
 	}()
-	jsonNotes, err:=retrieveJSONNotes([]int{1}, []string{"test"}, []string{"test"}, false)
-	if err!= nil{
+	jsonNotes, err := retrieveJSONNotes([]int{1}, []string{"test"}, []string{"test"}, false)
+	if err != nil {
 		t.Errorf("retrieveJSONNotes failed, error msg: %v", err)
 	}
 	export2File(jsonNotes)

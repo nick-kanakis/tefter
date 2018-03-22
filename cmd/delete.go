@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 	"log"
 	"strconv"
@@ -27,12 +28,15 @@ func deleteWrapper(cmd *cobra.Command, args []string) {
 		}
 		ids = append(ids, id)
 	}
-	delete(ids)
+	if err := delete(ids); err != nil {
+		log.Panicln(err)
+	}
 }
 
-func delete(ids []int64) {
+func delete(ids []int64) error {
 	err := NoteDB.DeleteNotes(ids)
 	if err != nil {
-		log.Panicf("Error while deleting notes, error msg: %v", err)
+		return fmt.Errorf("Error while deleting notes, error msg: %v", err)
 	}
+	return nil
 }

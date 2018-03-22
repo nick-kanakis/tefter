@@ -1,18 +1,22 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/spf13/cobra"
 	"log"
 )
 
-var searchCmd = &cobra.Command{
-	Use:     "search",
-	Short:   "Search notes given a keyword",
-	Long:    "Keyword is searched against title and content of the note, if no keyword is given all notes will be printed",
-	Example: "search myKeyword",
-	Run:     searchWrapper,
-}
+var (
+	print     = printNotes2Terminal
+	searchCmd = &cobra.Command{
+		Use:     "search",
+		Short:   "Search notes given a keyword",
+		Long:    "Keyword is searched against title and content of the note, if no keyword is given all notes will be printed",
+		Example: "search myKeyword",
+		Run:     searchWrapper,
+	}
+)
 
 func init() {
 	rootCmd.AddCommand(searchCmd)
@@ -23,10 +27,18 @@ func searchWrapper(cmd *cobra.Command, args []string) {
 	if len(args) > 0 {
 		keyword = args[0]
 	}
-	search(keyword, printNotes2Terminal)
+	notes, err := search(keyword)
+	if err != nil {
+		log.Panicln(err)
+	}
+	jNotes, err := transformNotes2JSONNotes(notes)
+	if err != nil {
+		log.Panicln(err)
+	}
+	print(jNotes)
 }
 
-func search(keyword string, output func(notes []*model.Note)) {
+func search(keyword string) ([]*model.Note, error) {
 	var notes []*model.Note
 	var err error
 	if len(keyword) == 0 {
@@ -35,7 +47,7 @@ func search(keyword string, output func(notes []*model.Note)) {
 		notes, err = NoteDB.SearchNotesByKeyword(keyword)
 	}
 	if err != nil {
-		log.Panicf("Error retrieving Notes from DB, error msg: %v", err)
+		return nil, fmt.Errorf("Error retrieving Notes from DB, error msg: %v", err)
 	}
-	output(notes)
+	return notes, nil
 }
