@@ -21,6 +21,11 @@ func connect2DB(dbPath string) *sqlx.DB {
 		}
 	}()
 
+	tx.MustExec(`CREATE TABLE IF NOT EXISTS account (
+		username TEXT NOT NULL,
+		password TEXT NOT NULL,
+		CONSTRAINT account_PK PRIMARY KEY(username))`)
+
 	tx.MustExec(`CREATE TABLE IF NOT EXISTS notebook (
 		id INTEGER NOT NULL,
 		title TEXT NOT NULL,

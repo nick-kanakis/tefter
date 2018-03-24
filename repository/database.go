@@ -30,3 +30,11 @@ type NotebookRepository interface {
 	DeleteNotebook(notebooksID int64) error
 	CloseDB() error
 }
+
+//AccountRepository ia an interface for handling DB related tasks fro Account
+type AccountRepository interface {
+	CreateAccount(username, password string) error
+	GetAccount(username string) (*model.Account, error)
+	DeleteAccount(username string) error
+	CloseDB() error
+}
