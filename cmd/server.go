@@ -10,16 +10,19 @@ import (
 	"strings"
 )
 
+//Server add a REST API layer for manipulating notes/notebooks
 type Server struct {
 	Router *mux.Router
 }
 
+//NewServer returns an instance of a Server struct
 func NewServer() *Server {
 	return &Server{
 		Router: mux.NewRouter(),
 	}
 }
 
+//Initialize sets handlers to different endpoints
 func (s *Server) Initialize() {
 	s.Router.HandleFunc("/addNote", s.addNote).Methods("POST")
 	s.Router.HandleFunc("/updateNote", s.updateNote).Methods("PUT")
@@ -33,7 +36,9 @@ func (s *Server) Initialize() {
 	s.Router.HandleFunc("/deleteNotebooks/{notebookTitles}", s.deleteNotebooks).Methods("DELETE")
 }
 
+//RUN starts the server
 func (s *Server) Run(port string) {
+	fmt.Println("Server starting at port :" + port)
 	log.Fatal(http.ListenAndServe(":"+port, s.Router))
 }
 
