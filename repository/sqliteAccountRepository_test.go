@@ -73,3 +73,21 @@ func TestDeleteAccount(t *testing.T) {
 		t.Error("Could not correctly delete account from DB")
 	}
 }
+
+
+func TestGetUsernames(t *testing.T) {
+	testRepo := NewAccountRepository("test.db")
+	//tear down test
+	defer func() {
+		testRepo.CloseDB()
+		os.Remove("test.db")
+	}()
+
+	testRepo.CreateAccount("nick1", "pass123")
+	testRepo.CreateAccount("nick2", "pass1234")
+	users := testRepo.GetUsernames()
+	
+	if len(users) !=2{
+		t.Error("Could not correctly retrieve users from DB")
+	}
+}

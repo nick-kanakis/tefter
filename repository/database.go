@@ -35,6 +35,7 @@ type NotebookRepository interface {
 type AccountRepository interface {
 	CreateAccount(username, password string) error
 	GetAccount(username string) (*model.Account, error)
+	GetUsernames() []string
 	DeleteAccount(username string) error
 	CloseDB() error
 }

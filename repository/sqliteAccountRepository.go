@@ -79,6 +79,14 @@ func (accountRepo *sqliteAccountRepository) DeleteAccount(username string) error
 	return err
 }
 
+func (accountRepo *sqliteAccountRepository) GetUsernames() []string{
+	getUsernames := "SELECT username FROM account"
+	usernames := []string{}
+	err := accountRepo.Select(&usernames, getUsernames, []interface{}{}...)
+	checkError(err)
+	return usernames
+}
+
 func (accountRepo *sqliteAccountRepository) CloseDB() error {
 	return accountRepo.Close()
 }
