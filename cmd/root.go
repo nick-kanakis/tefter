@@ -12,6 +12,8 @@ var (
 	NoteDB repository.NoteRepository
 	//NotebookDB exposed the available DB actions for notebooks.
 	NotebookDB repository.NotebookRepository
+	//AccountDB exposed the available DB actions for accounts.
+	AccountDB repository.AccountRepository
 
 	rootCmd = &cobra.Command{
 		Use:   "tefter",

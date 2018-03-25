@@ -10,8 +10,11 @@ func main() {
 	dbPath := "tefter.db"
 	noteDB := repository.NewNoteRepository(dbPath)
 	notebookDB := repository.NewNotebookRepository(dbPath)
+	accountDB := repository.NewAccountRepository(dbPath)
 
 	cmd.NoteDB = noteDB
 	cmd.NotebookDB = notebookDB
+	cmd.AccountDB = accountDB
+	
 	cmd.Execute()
 }

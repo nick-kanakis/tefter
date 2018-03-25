@@ -4,14 +4,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go/request"
 	"log"
 	"net/http"
+	"crypto/rand"
 	"strconv"
 	"strings"
+	"time"
+	"github.com/nicolasmanic/tefter/model"
+	"golang.org/x/crypto/bcrypt"
 )
 
 //Server add a REST API layer for manipulating notes/notebooks
 type Server struct {
+	signingKey []byte
 	Router *mux.Router
 }
 
@@ -22,8 +29,15 @@ func NewServer() *Server {
 	}
 }
 
-//Initialize sets handlers to different endpoints
+//Initialize initialize signing key & sets handlers to different endpoints
 func (s *Server) Initialize() {
+	//generate random signing key
+	s.signingKey = make([]byte, 32)
+	_, err := rand.Read(s.signingKey)
+	if err != nil{
+		log.Panicln("Failed to generate signing key")
+	}
+
 	s.Router.HandleFunc("/addNote", s.addNote).Methods("POST")
 	s.Router.HandleFunc("/updateNote", s.updateNote).Methods("PUT")
 	s.Router.HandleFunc("/getNotesByID/{ids}", s.getNotes).Methods("GET")
@@ -34,17 +48,25 @@ func (s *Server) Initialize() {
 	s.Router.HandleFunc("/searchBy/{keyword}", s.searchKeyword).Methods("GET")
 	s.Router.HandleFunc("/updateNotebook/{oldTitle}/{newTitle}", s.updateNotebook).Methods("PUT")
 	s.Router.HandleFunc("/deleteNotebooks/{notebookTitles}", s.deleteNotebooks).Methods("DELETE")
+	s.Router.HandleFunc("/login", s.login).Methods("POST")
 }
 
-//RUN starts the server
+//Run starts the server
 func (s *Server) Run(port string) {
 	fmt.Println("Server starting at port :" + port)
 	log.Fatal(http.ListenAndServe(":"+port, s.Router))
 }
 
 var saveNoteFunc = addJSONNote
+var checkTokenFunc = checkToken
 
 func (s *Server) addNote(w http.ResponseWriter, r *http.Request) {
+	if err:= checkTokenFunc(r, s.signingKey); err != nil{
+		fmt.Printf("Check token failed with message: %v", err)
+		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
+		return
+	}
+
 	var jNote *jsonNote
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&jNote); err != nil {
@@ -64,6 +86,12 @@ func (s *Server) addNote(w http.ResponseWriter, r *http.Request) {
 var updateNoteFunc = updateJSONNote
 
 func (s *Server) updateNote(w http.ResponseWriter, r *http.Request) {
+	if err:= checkTokenFunc(r, s.signingKey); err != nil{
+		fmt.Printf("Check token failed with message: %v", err)
+		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
+		return
+	}
+
 	var jNote *jsonNote
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&jNote); err != nil {
@@ -83,6 +111,12 @@ func (s *Server) updateNote(w http.ResponseWriter, r *http.Request) {
 var retrieveNotesFunc = retrieveJSONNotes
 
 func (s *Server) getNotes(w http.ResponseWriter, r *http.Request) {
+	if err:= checkTokenFunc(r, s.signingKey); err != nil{
+		fmt.Printf("Check token failed with message: %v", err)
+		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
+		return
+	}
+
 	vars := mux.Vars(r)
 	var jsonNotes []*jsonNote
 	var err error
@@ -115,6 +149,12 @@ func (s *Server) getNotes(w http.ResponseWriter, r *http.Request) {
 var deleteNotesFunc = delete
 
 func (s *Server) deleteNotes(w http.ResponseWriter, r *http.Request) {
+	if err:= checkTokenFunc(r, s.signingKey); err != nil{
+		fmt.Printf("Check token failed with message: %v", err)
+		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
+		return
+	}
+
 	vars := mux.Vars(r)
 	//Comma separated list of ids
 	strIDs := vars["ids"]
@@ -133,6 +173,12 @@ func (s *Server) deleteNotes(w http.ResponseWriter, r *http.Request) {
 var deleteNotebooksFunc = deleteNotebooks
 
 func (s *Server) deleteNotebooks(w http.ResponseWriter, r *http.Request) {
+	if err:= checkTokenFunc(r, s.signingKey); err != nil{
+		fmt.Printf("Check token failed with message: %v", err)
+		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
+		return
+	}
+
 	vars := mux.Vars(r)
 	//Comma separated  notebookTitles
 	strNotebookTitles := vars["notebookTitles"]
@@ -148,6 +194,12 @@ func (s *Server) deleteNotebooks(w http.ResponseWriter, r *http.Request) {
 var updateNotebookFunc = updateNotebook
 
 func (s *Server) updateNotebook(w http.ResponseWriter, r *http.Request) {
+	if err:= checkTokenFunc(r, s.signingKey); err != nil{
+		fmt.Printf("Check token failed with message: %v", err)
+		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
+		return
+	}
+
 	vars := mux.Vars(r)
 	oldTitle := vars["oldTitle"]
 	newTitle := vars["newTitle"]
@@ -161,6 +213,12 @@ func (s *Server) updateNotebook(w http.ResponseWriter, r *http.Request) {
 var searchNotesFunc = search
 
 func (s *Server) searchKeyword(w http.ResponseWriter, r *http.Request) {
+	if err:= checkTokenFunc(r, s.signingKey); err != nil{
+		fmt.Printf("Check token failed with message: %v", err)
+		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
+		return
+	}
+
 	vars := mux.Vars(r)
 	keyword := vars["keyword"]
 	notes, err := searchNotesFunc(keyword)
@@ -172,6 +230,50 @@ func (s *Server) searchKeyword(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, err.Error())
 	}
 	respondWithJSON(w, http.StatusOK, jNotes)
+}
+
+func (s *Server) login(w http.ResponseWriter, r *http.Request) {
+	var accountRequest *model.Account
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&accountRequest); err != nil {
+		fmt.Printf("Error while decoding account, error msg: %v", err)
+		respondWithError(w, http.StatusBadRequest, "Failed decoding account")
+		return
+	}
+	account, err := AccountDB.GetAccount(accountRequest.Username)
+	if bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(accountRequest.Password)); err != nil {
+		fmt.Printf("Username and password don't match, error msg: %v", err)
+		respondWithError(w, http.StatusUnauthorized, "Username and password don't match")
+		return
+	}
+	//token will be valid for 24 hours
+	exp := time.Now().Add(24 * time.Hour)
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"exp": exp.Unix(),
+		"sub": account.Username,
+	})
+	signedToken, err:= token.SignedString(s.signingKey)
+	if err != nil{
+		fmt.Printf("Could note sign token, error msg: %v", err)
+		respondWithError(w, http.StatusInternalServerError, "Could note sign token")
+		return
+	}
+	respondWithJSON(w, http.StatusOK, map[string]string{"token": signedToken})
+}
+
+func checkToken(r *http.Request, signingKey []byte) error {
+	token, err := request.ParseFromRequest(r, request.AuthorizationHeaderExtractor, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method")
+		}
+		return signingKey, nil
+	})
+	if err != nil {
+		return err
+	}
+	claims := token.Claims.(jwt.MapClaims)
+	return claims.Valid()
 }
 
 //Split comma separated integers

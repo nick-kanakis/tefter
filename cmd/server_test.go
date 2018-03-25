@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/nicolasmanic/tefter/repository"
+	"golang.org/x/crypto/bcrypt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -45,10 +46,15 @@ func TestParseInts(t *testing.T) {
 
 func TestAddNoteAPI(t *testing.T) {
 	originalSaveNote := saveNoteFunc
+	originalCheckToken := checkTokenFunc
 	defer func() {
 		saveNoteFunc = originalSaveNote
+		checkTokenFunc = originalCheckToken
 	}()
 	saveNoteFunc = func(*jsonNote) error {
+		return nil
+	}
+	checkTokenFunc = func (r *http.Request, signingKey []byte) error {
 		return nil
 	}
 
@@ -61,10 +67,15 @@ func TestAddNoteAPI(t *testing.T) {
 
 func TestUpdateNoteAPI(t *testing.T) {
 	originalUpdateNote := updateNoteFunc
+	originalCheckToken := checkTokenFunc
 	defer func() {
 		updateNoteFunc = originalUpdateNote
+		checkTokenFunc = originalCheckToken
 	}()
 	updateNoteFunc = func(*jsonNote) error {
+		return nil
+	}
+	checkTokenFunc = func (r *http.Request, signingKey []byte) error {
 		return nil
 	}
 
@@ -77,8 +88,10 @@ func TestUpdateNoteAPI(t *testing.T) {
 
 func TestGetNotesByIDAPI(t *testing.T) {
 	originalRetrieveNotes := retrieveNotesFunc
+	originalCheckToken := checkTokenFunc
 	defer func() {
 		retrieveNotesFunc = originalRetrieveNotes
+		checkTokenFunc = originalCheckToken
 	}()
 
 	retrieveNotesFunc = func(ids []int, notebookTitles, tags []string, getAll bool) ([]*jsonNote, error) {
@@ -86,6 +99,9 @@ func TestGetNotesByIDAPI(t *testing.T) {
 			t.Error("Wrong arguments at retrieveNotesFunc for searching by id")
 		}
 		return mockJSONNotes(), nil
+	}
+	checkTokenFunc = func (r *http.Request, signingKey []byte) error {
+		return nil
 	}
 
 	req, _ := http.NewRequest("GET", "/getNotesByID/1,2", nil)
@@ -112,8 +128,10 @@ func TestGetNotesByIDAPI(t *testing.T) {
 
 func TestGetNotesByNotebookTitleAPI(t *testing.T) {
 	originalRetrieveNotes := retrieveNotesFunc
+	originalCheckToken := checkTokenFunc
 	defer func() {
 		retrieveNotesFunc = originalRetrieveNotes
+		checkTokenFunc = originalCheckToken
 	}()
 
 	retrieveNotesFunc = func(ids []int, notebookTitles, tags []string, getAll bool) ([]*jsonNote, error) {
@@ -121,6 +139,9 @@ func TestGetNotesByNotebookTitleAPI(t *testing.T) {
 			t.Error("Wrong arguments at retrieveNotesFunc for searching by notebookTitle")
 		}
 		return mockJSONNotes(), nil
+	}
+	checkTokenFunc = func (r *http.Request, signingKey []byte) error {
+		return nil
 	}
 
 	req, _ := http.NewRequest("GET", "/getNotesByNotebookTitle/title1,title2,title3", nil)
@@ -147,8 +168,10 @@ func TestGetNotesByNotebookTitleAPI(t *testing.T) {
 
 func TestGetNotesByNotebookTagsAPI(t *testing.T) {
 	originalRetrieveNotes := retrieveNotesFunc
+	originalCheckToken := checkTokenFunc
 	defer func() {
 		retrieveNotesFunc = originalRetrieveNotes
+		checkTokenFunc = originalCheckToken
 	}()
 
 	retrieveNotesFunc = func(ids []int, notebookTitles, tags []string, getAll bool) ([]*jsonNote, error) {
@@ -156,6 +179,9 @@ func TestGetNotesByNotebookTagsAPI(t *testing.T) {
 			t.Error("Wrong arguments at retrieveNotesFunc for searching by tags")
 		}
 		return mockJSONNotes(), nil
+	}
+	checkTokenFunc = func (r *http.Request, signingKey []byte) error {
+		return nil
 	}
 
 	req, _ := http.NewRequest("GET", "/getNotesByTags/tag1", nil)
@@ -182,8 +208,10 @@ func TestGetNotesByNotebookTagsAPI(t *testing.T) {
 
 func TestGetAllNotesAPI(t *testing.T) {
 	originalRetrieveNotes := retrieveNotesFunc
+	originalCheckToken := checkTokenFunc
 	defer func() {
 		retrieveNotesFunc = originalRetrieveNotes
+		checkTokenFunc = originalCheckToken
 	}()
 
 	retrieveNotesFunc = func(ids []int, notebookTitles, tags []string, getAll bool) ([]*jsonNote, error) {
@@ -191,6 +219,9 @@ func TestGetAllNotesAPI(t *testing.T) {
 			t.Error("Wrong arguments at retrieveNotesFunc for all notes")
 		}
 		return mockJSONNotes(), nil
+	}
+	checkTokenFunc = func (r *http.Request, signingKey []byte) error {
+		return nil
 	}
 
 	req, _ := http.NewRequest("GET", "/getAllNotes", nil)
@@ -217,13 +248,18 @@ func TestGetAllNotesAPI(t *testing.T) {
 
 func TestDeleteNotesAPI(t *testing.T) {
 	originalDeleteNotes := deleteNotesFunc
+	originalCheckToken := checkTokenFunc
 	defer func() {
 		deleteNotesFunc = originalDeleteNotes
+		checkTokenFunc = originalCheckToken
 	}()
 	deleteNotesFunc = func(ids []int64) error {
 		if len(ids) != 2 {
 			t.Errorf("Incorrect number of ids passed for notes deletion, ids received: %v", len(ids))
 		}
+		return nil
+	}
+	checkTokenFunc = func (r *http.Request, signingKey []byte) error {
 		return nil
 	}
 
@@ -234,13 +270,18 @@ func TestDeleteNotesAPI(t *testing.T) {
 
 func TestDeleteNotebooksAPI(t *testing.T) {
 	originalDeleteNotebooks := deleteNotebooksFunc
+	originalCheckToken := checkTokenFunc
 	defer func() {
 		deleteNotebooksFunc = originalDeleteNotebooks
+		checkTokenFunc = originalCheckToken
 	}()
 	deleteNotebooksFunc = func(titles []string) error {
 		if len(titles) != 1 {
 			t.Errorf("Incorrect number of titles passed for notebooks deletion, titles received: %v", len(titles))
 		}
+		return nil
+	}
+	checkTokenFunc = func (r *http.Request, signingKey []byte) error {
 		return nil
 	}
 
@@ -251,8 +292,10 @@ func TestDeleteNotebooksAPI(t *testing.T) {
 
 func TestUpdateNotebooksAPI(t *testing.T) {
 	originalUpdateNotebook := updateNotebookFunc
+	originalCheckToken := checkTokenFunc
 	defer func() {
 		updateNotebookFunc = originalUpdateNotebook
+		checkTokenFunc = originalCheckToken
 	}()
 	updateNotebookFunc = func(oldTitle, newTitle string) error {
 		if oldTitle != "oldTitle_1" || newTitle != "newTitle_1" {
@@ -260,8 +303,60 @@ func TestUpdateNotebooksAPI(t *testing.T) {
 		}
 		return nil
 	}
+	checkTokenFunc = func (r *http.Request, signingKey []byte) error {
+		return nil
+	}
 
 	req, _ := http.NewRequest("PUT", "/updateNotebook/oldTitle_1/newTitle_1", nil)
+	response := executeRequest(req)
+	checkResponseCode(t, http.StatusOK, response.Code)
+}
+
+func TestSearchNotesAPI(t *testing.T) {
+	originalSearchNotes := searchNotesFunc
+	oldNotebookDB := NotebookDB
+	NotebookDB = mockNotebookDBAPI{}
+	originalCheckToken := checkTokenFunc
+	defer func() {
+		searchNotesFunc = originalSearchNotes
+		NotebookDB = oldNotebookDB
+		checkTokenFunc = originalCheckToken
+	}()
+
+	searchNotesFunc = func(keyword string) ([]*model.Note, error) {
+		note1 := model.NewNote("testTitle", "testMemo", 1, []string{})
+		note1.ID = 1
+		note2 := model.NewNote("testTitle2", "testMemo2", 2, []string{})
+		note2.ID = 2
+		return []*model.Note{note1, note2}, nil
+	}
+	checkTokenFunc = func (r *http.Request, signingKey []byte) error {
+		return nil
+	}
+
+	req, _ := http.NewRequest("GET", "/searchBy/Title", nil)
+	response := executeRequest(req)
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	var jNotes []*jsonNote
+	decoder := json.NewDecoder(response.Body)
+	if err := decoder.Decode(&jNotes); err != nil {
+		t.Errorf("Failed decoding returned json notes, error msg:%v", err)
+	}
+	if len(jNotes) != 2 {
+		t.Error("Failed decoding returned json notes")
+	}
+}
+
+func TestLoginAPI(t *testing.T) {
+	oldAccountDB := AccountDB
+	AccountDB = mockAccountDBAPI{}
+	defer func() {
+		AccountDB = oldAccountDB
+	}()
+	
+	payload := []byte(`{"username":"mockedUser", "password": "mockedPassword"}`) 
+	req, _ := http.NewRequest("POST", "/login", bytes.NewBuffer(payload))
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
 }
@@ -281,36 +376,17 @@ func checkResponseCode(t *testing.T, expected, actual int) {
 	}
 }
 
-func TestSearchNotesAPI(t *testing.T) {
-	originalSearchNotes := searchNotesFunc
-	oldNotebookDB := NotebookDB
-	NotebookDB = mockNotebookDBAPI{}
-	defer func() {
-		searchNotesFunc = originalSearchNotes
-		NotebookDB = oldNotebookDB
-	}()
-
-	searchNotesFunc = func(keyword string) ([]*model.Note, error) {
-		note1 := model.NewNote("testTitle", "testMemo", 1, []string{})
-		note1.ID = 1
-		note2 := model.NewNote("testTitle2", "testMemo2", 2, []string{})
-		note2.ID = 2
-		return []*model.Note{note1, note2}, nil
-	}
-
-	req, _ := http.NewRequest("GET", "/searchBy/Title", nil)
-	response := executeRequest(req)
-	checkResponseCode(t, http.StatusOK, response.Code)
-
-	var jNotes []*jsonNote
-	decoder := json.NewDecoder(response.Body)
-	if err := decoder.Decode(&jNotes); err != nil {
-		t.Errorf("Failed decoding returned json notes, error msg:%v", err)
-	}
-	if len(jNotes) != 2 {
-		t.Error("Failed decoding returned json notes")
-	}
+type mockAccountDBAPI struct {
+	repository.AccountRepository
 }
+
+func (mDB mockAccountDBAPI) GetAccount(string) (*model.Account, error) {
+	hashedPass,_:=bcrypt.GenerateFromPassword([]byte("mockedPassword"), 10)
+	return &model.Account{
+		Username: "mockedUser",
+		Password: string(hashedPass)}, nil
+}
+
 
 type mockNotebookDBAPI struct {
 	repository.NotebookRepository
