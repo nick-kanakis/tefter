@@ -15,6 +15,6 @@ func main() {
 	cmd.NoteDB = noteDB
 	cmd.NotebookDB = notebookDB
 	cmd.AccountDB = accountDB
-	
+
 	cmd.Execute()
 }

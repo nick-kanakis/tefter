@@ -25,6 +25,7 @@ var serveCmd = &cobra.Command{
 func serve(cmd *cobra.Command, args []string) {
 	port, _ := cmd.Flags().GetString("port")
 	server := NewServer()
+	server.Initialize()
 	server.Run(port)
 }
 

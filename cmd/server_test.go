@@ -54,7 +54,7 @@ func TestAddNoteAPI(t *testing.T) {
 	saveNoteFunc = func(*jsonNote) error {
 		return nil
 	}
-	checkTokenFunc = func (r *http.Request, signingKey []byte) error {
+	checkTokenFunc = func(r *http.Request, signingKey []byte) error {
 		return nil
 	}
 
@@ -75,7 +75,7 @@ func TestUpdateNoteAPI(t *testing.T) {
 	updateNoteFunc = func(*jsonNote) error {
 		return nil
 	}
-	checkTokenFunc = func (r *http.Request, signingKey []byte) error {
+	checkTokenFunc = func(r *http.Request, signingKey []byte) error {
 		return nil
 	}
 
@@ -100,7 +100,7 @@ func TestGetNotesByIDAPI(t *testing.T) {
 		}
 		return mockJSONNotes(), nil
 	}
-	checkTokenFunc = func (r *http.Request, signingKey []byte) error {
+	checkTokenFunc = func(r *http.Request, signingKey []byte) error {
 		return nil
 	}
 
@@ -140,7 +140,7 @@ func TestGetNotesByNotebookTitleAPI(t *testing.T) {
 		}
 		return mockJSONNotes(), nil
 	}
-	checkTokenFunc = func (r *http.Request, signingKey []byte) error {
+	checkTokenFunc = func(r *http.Request, signingKey []byte) error {
 		return nil
 	}
 
@@ -180,7 +180,7 @@ func TestGetNotesByNotebookTagsAPI(t *testing.T) {
 		}
 		return mockJSONNotes(), nil
 	}
-	checkTokenFunc = func (r *http.Request, signingKey []byte) error {
+	checkTokenFunc = func(r *http.Request, signingKey []byte) error {
 		return nil
 	}
 
@@ -220,7 +220,7 @@ func TestGetAllNotesAPI(t *testing.T) {
 		}
 		return mockJSONNotes(), nil
 	}
-	checkTokenFunc = func (r *http.Request, signingKey []byte) error {
+	checkTokenFunc = func(r *http.Request, signingKey []byte) error {
 		return nil
 	}
 
@@ -259,7 +259,7 @@ func TestDeleteNotesAPI(t *testing.T) {
 		}
 		return nil
 	}
-	checkTokenFunc = func (r *http.Request, signingKey []byte) error {
+	checkTokenFunc = func(r *http.Request, signingKey []byte) error {
 		return nil
 	}
 
@@ -281,7 +281,7 @@ func TestDeleteNotebooksAPI(t *testing.T) {
 		}
 		return nil
 	}
-	checkTokenFunc = func (r *http.Request, signingKey []byte) error {
+	checkTokenFunc = func(r *http.Request, signingKey []byte) error {
 		return nil
 	}
 
@@ -303,7 +303,7 @@ func TestUpdateNotebooksAPI(t *testing.T) {
 		}
 		return nil
 	}
-	checkTokenFunc = func (r *http.Request, signingKey []byte) error {
+	checkTokenFunc = func(r *http.Request, signingKey []byte) error {
 		return nil
 	}
 
@@ -330,7 +330,7 @@ func TestSearchNotesAPI(t *testing.T) {
 		note2.ID = 2
 		return []*model.Note{note1, note2}, nil
 	}
-	checkTokenFunc = func (r *http.Request, signingKey []byte) error {
+	checkTokenFunc = func(r *http.Request, signingKey []byte) error {
 		return nil
 	}
 
@@ -354,8 +354,8 @@ func TestLoginAPI(t *testing.T) {
 	defer func() {
 		AccountDB = oldAccountDB
 	}()
-	
-	payload := []byte(`{"username":"mockedUser", "password": "mockedPassword"}`) 
+
+	payload := []byte(`{"username":"mockedUser", "password": "mockedPassword"}`)
 	req, _ := http.NewRequest("POST", "/login", bytes.NewBuffer(payload))
 	response := executeRequest(req)
 	checkResponseCode(t, http.StatusOK, response.Code)
@@ -381,12 +381,11 @@ type mockAccountDBAPI struct {
 }
 
 func (mDB mockAccountDBAPI) GetAccount(string) (*model.Account, error) {
-	hashedPass,_:=bcrypt.GenerateFromPassword([]byte("mockedPassword"), 10)
+	hashedPass, _ := bcrypt.GenerateFromPassword([]byte("mockedPassword"), 10)
 	return &model.Account{
 		Username: "mockedUser",
 		Password: string(hashedPass)}, nil
 }
-
 
 type mockNotebookDBAPI struct {
 	repository.NotebookRepository

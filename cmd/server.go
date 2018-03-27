@@ -1,25 +1,25 @@
 package cmd
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/mux"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
+	"github.com/gorilla/mux"
+	"github.com/nicolasmanic/tefter/model"
+	"golang.org/x/crypto/bcrypt"
 	"log"
 	"net/http"
-	"crypto/rand"
 	"strconv"
 	"strings"
 	"time"
-	"github.com/nicolasmanic/tefter/model"
-	"golang.org/x/crypto/bcrypt"
 )
 
 //Server add a REST API layer for manipulating notes/notebooks
 type Server struct {
 	signingKey []byte
-	Router *mux.Router
+	Router     *mux.Router
 }
 
 //NewServer returns an instance of a Server struct
@@ -34,7 +34,7 @@ func (s *Server) Initialize() {
 	//generate random signing key
 	s.signingKey = make([]byte, 32)
 	_, err := rand.Read(s.signingKey)
-	if err != nil{
+	if err != nil {
 		log.Panicln("Failed to generate signing key")
 	}
 
@@ -53,7 +53,7 @@ func (s *Server) Initialize() {
 
 //Run starts the server
 func (s *Server) Run(port string) {
-	fmt.Println("Server starting at port :" + port)
+	fmt.Println("Server starting at port: " + port)
 	log.Fatal(http.ListenAndServe(":"+port, s.Router))
 }
 
@@ -61,7 +61,7 @@ var saveNoteFunc = addJSONNote
 var checkTokenFunc = checkToken
 
 func (s *Server) addNote(w http.ResponseWriter, r *http.Request) {
-	if err:= checkTokenFunc(r, s.signingKey); err != nil{
+	if err := checkTokenFunc(r, s.signingKey); err != nil {
 		fmt.Printf("Check token failed with message: %v", err)
 		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
 		return
@@ -86,7 +86,7 @@ func (s *Server) addNote(w http.ResponseWriter, r *http.Request) {
 var updateNoteFunc = updateJSONNote
 
 func (s *Server) updateNote(w http.ResponseWriter, r *http.Request) {
-	if err:= checkTokenFunc(r, s.signingKey); err != nil{
+	if err := checkTokenFunc(r, s.signingKey); err != nil {
 		fmt.Printf("Check token failed with message: %v", err)
 		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
 		return
@@ -111,7 +111,7 @@ func (s *Server) updateNote(w http.ResponseWriter, r *http.Request) {
 var retrieveNotesFunc = retrieveJSONNotes
 
 func (s *Server) getNotes(w http.ResponseWriter, r *http.Request) {
-	if err:= checkTokenFunc(r, s.signingKey); err != nil{
+	if err := checkTokenFunc(r, s.signingKey); err != nil {
 		fmt.Printf("Check token failed with message: %v", err)
 		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
 		return
@@ -149,7 +149,7 @@ func (s *Server) getNotes(w http.ResponseWriter, r *http.Request) {
 var deleteNotesFunc = delete
 
 func (s *Server) deleteNotes(w http.ResponseWriter, r *http.Request) {
-	if err:= checkTokenFunc(r, s.signingKey); err != nil{
+	if err := checkTokenFunc(r, s.signingKey); err != nil {
 		fmt.Printf("Check token failed with message: %v", err)
 		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
 		return
@@ -173,7 +173,7 @@ func (s *Server) deleteNotes(w http.ResponseWriter, r *http.Request) {
 var deleteNotebooksFunc = deleteNotebooks
 
 func (s *Server) deleteNotebooks(w http.ResponseWriter, r *http.Request) {
-	if err:= checkTokenFunc(r, s.signingKey); err != nil{
+	if err := checkTokenFunc(r, s.signingKey); err != nil {
 		fmt.Printf("Check token failed with message: %v", err)
 		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
 		return
@@ -194,7 +194,7 @@ func (s *Server) deleteNotebooks(w http.ResponseWriter, r *http.Request) {
 var updateNotebookFunc = updateNotebook
 
 func (s *Server) updateNotebook(w http.ResponseWriter, r *http.Request) {
-	if err:= checkTokenFunc(r, s.signingKey); err != nil{
+	if err := checkTokenFunc(r, s.signingKey); err != nil {
 		fmt.Printf("Check token failed with message: %v", err)
 		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
 		return
@@ -213,7 +213,7 @@ func (s *Server) updateNotebook(w http.ResponseWriter, r *http.Request) {
 var searchNotesFunc = search
 
 func (s *Server) searchKeyword(w http.ResponseWriter, r *http.Request) {
-	if err:= checkTokenFunc(r, s.signingKey); err != nil{
+	if err := checkTokenFunc(r, s.signingKey); err != nil {
 		fmt.Printf("Check token failed with message: %v", err)
 		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
 		return
@@ -241,7 +241,12 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	account, err := AccountDB.GetAccount(accountRequest.Username)
-	if bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(accountRequest.Password)); err != nil {
+	if err != nil {
+		fmt.Printf("Error retrieving username, error msg: %v", err)
+		respondWithError(w, http.StatusInternalServerError, "Error retrieving username")
+		return
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(accountRequest.Password)); err != nil {
 		fmt.Printf("Username and password don't match, error msg: %v", err)
 		respondWithError(w, http.StatusUnauthorized, "Username and password don't match")
 		return
@@ -253,8 +258,8 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		"exp": exp.Unix(),
 		"sub": account.Username,
 	})
-	signedToken, err:= token.SignedString(s.signingKey)
-	if err != nil{
+	signedToken, err := token.SignedString(s.signingKey)
+	if err != nil {
 		fmt.Printf("Could note sign token, error msg: %v", err)
 		respondWithError(w, http.StatusInternalServerError, "Could note sign token")
 		return
