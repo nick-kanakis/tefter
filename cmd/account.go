@@ -1,33 +1,39 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
+	"bufio"
 	"fmt"
+	"github.com/spf13/cobra"
+	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/crypto/ssh/terminal"
+	"log"
+	"os"
+	"strings"
+	"syscall"
 )
 
-var( 
-	accountCmd = &cobra.Command{
+var (
+	getCredentials = credentials
+	accountCmd     = &cobra.Command{
 		Use:   "account",
 		Short: "Add/Delete account",
-		}
+	}
 	addAccountCmd = &cobra.Command{
 		Use:   "add username",
 		Short: "Create new account",
-		Args:  cobra.ExactArgs(1),
-		Run: addAccount,
-		}
-	deleteAccountCmd =  &cobra.Command{
+		Run:   addAccount,
+	}
+	deleteAccountCmd = &cobra.Command{
 		Use:   "delete username",
 		Short: "Delete existing account",
 		Args:  cobra.NoArgs,
-		Run: deleteAccount,
-		}
-	printUsernamesCmd =  &cobra.Command{
+		Run:   deleteAccount,
+	}
+	printUsernamesCmd = &cobra.Command{
 		Use:   "print",
 		Short: "Show all usernames",
-		Args:  cobra.ExactArgs(1),
-		Run: getAccounts,
-		}
+		Run:   getAccounts,
+	}
 )
 
 func init() {
@@ -38,11 +44,28 @@ func init() {
 }
 
 func addAccount(cmd *cobra.Command, args []string) {
-	panic("Not implemented")
+	username, password := getCredentials()
+	hashedPassword, err := bcrypt.GenerateFromPassword(password, 10)
+	if err != nil {
+		log.Panicf("Failed hashing password, error msg: %v", err)
+	}
+	err = AccountDB.CreateAccount(username, hashedPassword)
+	if err != nil {
+		log.Panicf("Failed creating new account, error msg: %v", err)
+	}
 }
 
 func deleteAccount(cmd *cobra.Command, args []string) {
-	panic("Not implemented")
+	username, password := getCredentials()
+	account, err := AccountDB.GetAccount(username)
+	if err != nil {
+		log.Panicf("Could not delete account for user: %v", username)
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(account.Password), password); err != nil {
+		log.Panicln("Username and password don't match")
+	}
+	AccountDB.DeleteAccount(username)
+	fmt.Printf("Account for user: %v deleted", username)
 }
 
 func getAccounts(cmd *cobra.Command, args []string) {
@@ -50,10 +73,31 @@ func getAccounts(cmd *cobra.Command, args []string) {
 	if len(usernames) == 0 {
 		fmt.Println("DB is empty")
 	}
-	
+
 	fmt.Println("Current Usernames in DB:")
-	for _, username:=range usernames{
-		fmt.Println("> "+username)
+	for _, username := range usernames {
+		fmt.Println("> " + username)
 	}
 }
 
+func credentials() (string, []byte) {
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Print("Enter Username: ")
+	username, _ := reader.ReadString('\n')
+
+	fmt.Print("Enter Password: ")
+	bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
+	if err != nil {
+		log.Panicf("Failed reading password, error msg: %v", err)
+	}
+	password := string(bytePassword)
+	if len(password) < 5 {
+		log.Panicln("Password must be at least 5 chars")
+	}
+	if username == "" {
+		log.Panicln("Empty username")
+	}
+
+	return strings.TrimSpace(username), bytePassword
+}
