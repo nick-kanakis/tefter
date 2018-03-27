@@ -17,8 +17,8 @@ func NewAccountRepository(dbPath string) AccountRepository {
 	return &sqliteAccountRepository{dbPath, db}
 }
 
-func (accountRepo *sqliteAccountRepository) CreateAccount(username, password string) error {
-	if username == "" || password == "" {
+func (accountRepo *sqliteAccountRepository) CreateAccount(username string, password []byte) error {
+	if username == "" || len(password) == 0 {
 		return fmt.Errorf("Username or/and password are empty")
 	}
 
@@ -79,7 +79,7 @@ func (accountRepo *sqliteAccountRepository) DeleteAccount(username string) error
 	return err
 }
 
-func (accountRepo *sqliteAccountRepository) GetUsernames() []string{
+func (accountRepo *sqliteAccountRepository) GetUsernames() []string {
 	getUsernames := "SELECT username FROM account"
 	usernames := []string{}
 	err := accountRepo.Select(&usernames, getUsernames, []interface{}{}...)

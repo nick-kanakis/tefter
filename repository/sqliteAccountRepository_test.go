@@ -13,7 +13,7 @@ func TestCreateAccount(t *testing.T) {
 		os.Remove("test.db")
 	}()
 
-	err := testRepo.CreateAccount("nick", "pass123")
+	err := testRepo.CreateAccount("nick", []byte("pass123"))
 	if err != nil {
 		t.Errorf("Could not save account to DB, error msg: %v", err)
 	}
@@ -27,7 +27,7 @@ func TestCreateAccountShouldFail(t *testing.T) {
 		os.Remove("test.db")
 	}()
 
-	err := testRepo.CreateAccount("", "")
+	err := testRepo.CreateAccount("", []byte{})
 	if err.Error() != "Username or/and password are empty" {
 		t.Error("Expected error with message: 'Username or/and password are empty'")
 	}
@@ -41,8 +41,8 @@ func TestGetAccount(t *testing.T) {
 		os.Remove("test.db")
 	}()
 
-	testRepo.CreateAccount("nick1", "pass123")
-	testRepo.CreateAccount("nick2", "pass1234")
+	testRepo.CreateAccount("nick1", []byte("pass123"))
+	testRepo.CreateAccount("nick2", []byte("pass1234"))
 	account, err := testRepo.GetAccount("nick1")
 	if err != nil {
 		t.Errorf("Could not retrieve account from DB, error msg: %v", err)
@@ -60,8 +60,8 @@ func TestDeleteAccount(t *testing.T) {
 		os.Remove("test.db")
 	}()
 
-	testRepo.CreateAccount("nick1", "pass123")
-	testRepo.CreateAccount("nick2", "pass1234")
+	testRepo.CreateAccount("nick1", []byte("pass123"))
+	testRepo.CreateAccount("nick2", []byte("pass1234"))
 	err := testRepo.DeleteAccount("nick1")
 	if err != nil {
 		t.Errorf("Could not delete account from DB, error msg: %v", err)
@@ -74,7 +74,6 @@ func TestDeleteAccount(t *testing.T) {
 	}
 }
 
-
 func TestGetUsernames(t *testing.T) {
 	testRepo := NewAccountRepository("test.db")
 	//tear down test
@@ -83,11 +82,11 @@ func TestGetUsernames(t *testing.T) {
 		os.Remove("test.db")
 	}()
 
-	testRepo.CreateAccount("nick1", "pass123")
-	testRepo.CreateAccount("nick2", "pass1234")
+	testRepo.CreateAccount("nick1", []byte("pass123"))
+	testRepo.CreateAccount("nick2", []byte("pass1234"))
 	users := testRepo.GetUsernames()
-	
-	if len(users) !=2{
+
+	if len(users) != 2 {
 		t.Error("Could not correctly retrieve users from DB")
 	}
 }

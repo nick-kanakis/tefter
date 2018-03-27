@@ -33,7 +33,7 @@ type NotebookRepository interface {
 
 //AccountRepository ia an interface for handling DB related tasks fro Account
 type AccountRepository interface {
-	CreateAccount(username, password string) error
+	CreateAccount(username string, password []byte) error
 	GetAccount(username string) (*model.Account, error)
 	GetUsernames() []string
 	DeleteAccount(username string) error
