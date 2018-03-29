@@ -1,40 +1,40 @@
 package cmd
 
 import (
-	"testing"
 	"github.com/nicolasmanic/tefter/repository"
+	"testing"
 )
 
-func TestGetAccounts(t *testing.T){
-	originalAccountDB := AccountDB 
+func TestGetAccounts(t *testing.T) {
+	originalAccountDB := AccountDB
 	AccountDB = mockAccountDB{}
-	defer func(){
+	defer func() {
 		AccountDB = originalAccountDB
 	}()
 	getAccounts(nil, []string{})
 }
 
-func TestGetAccountsEmptyResultWillNotFail(t *testing.T){
-	originalAccountDB := AccountDB 
+func TestGetAccountsEmptyResultWillNotFail(t *testing.T) {
+	originalAccountDB := AccountDB
 	AccountDB = mockAccountDBReturnEmpty{}
-	defer func(){
+	defer func() {
 		AccountDB = originalAccountDB
 	}()
 	getAccounts(nil, []string{})
 }
 
-type mockAccountDB struct{
+type mockAccountDB struct {
 	repository.AccountRepository
-} 
+}
 
-func (mDB mockAccountDB) GetUsernames() []string{
+func (mDB mockAccountDB) GetUsernames() []string {
 	return []string{"username1", "username2"}
 }
 
-type mockAccountDBReturnEmpty struct{
+type mockAccountDBReturnEmpty struct {
 	repository.AccountRepository
-} 
+}
 
-func (mDB mockAccountDBReturnEmpty) GetUsernames() []string{
+func (mDB mockAccountDBReturnEmpty) GetUsernames() []string {
 	return []string{}
 }

@@ -13,8 +13,7 @@ import (
 )
 
 var (
-	getCredentials = credentials
-	accountCmd     = &cobra.Command{
+	accountCmd = &cobra.Command{
 		Use:   "account",
 		Short: "Add/Delete account",
 	}
@@ -44,7 +43,7 @@ func init() {
 }
 
 func addAccount(cmd *cobra.Command, args []string) {
-	username, password := getCredentials()
+	username, password := credentials()
 	hashedPassword, err := bcrypt.GenerateFromPassword(password, 10)
 	if err != nil {
 		log.Panicf("Failed hashing password, error msg: %v", err)
@@ -56,7 +55,7 @@ func addAccount(cmd *cobra.Command, args []string) {
 }
 
 func deleteAccount(cmd *cobra.Command, args []string) {
-	username, password := getCredentials()
+	username, password := credentials()
 	account, err := AccountDB.GetAccount(username)
 	if err != nil {
 		log.Panicf("Could not delete account for user: %v", username)
