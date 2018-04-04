@@ -2,13 +2,14 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/nicolasmanic/tefter/model"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
+
+	"github.com/nicolasmanic/tefter/model"
 )
 
 //TODO: unit test
