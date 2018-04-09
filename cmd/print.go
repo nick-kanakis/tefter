@@ -6,6 +6,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sort"
 )
 
 var printCmd = &cobra.Command{
@@ -46,12 +47,35 @@ func printNotes2Terminal(jNotes []*jsonNote) {
 	if len(jNotes) <= 0 {
 		return
 	}
+	//Sort By date (descenting)
+	sort.Slice(jNotes, func(i, j int) bool{
+		return jNotes[i].LastUpdated.After(jNotes[j].LastUpdated)
+	})
+
+	theme := tui.NewTheme()
+	selected := tui.Style{Bg: tui.ColorWhite, Fg: tui.ColorBlack}
+	theme.SetStyle("table.cell.selected", selected)
+
 	notesInfoHeader := tui.NewTable(0, 0)
 	notesInfoHeader.SetColumnStretch(0, 1)
 	notesInfoHeader.SetColumnStretch(1, 2)
 	notesInfoHeader.SetColumnStretch(2, 3)
 	notesInfoHeader.SetColumnStretch(3, 2)
-	notesInfoHeader.AppendRow(tui.NewLabel("ID"), tui.NewLabel("Notebook Title"), tui.NewLabel("Note Title"), tui.NewLabel("Tags"))
+
+	labelID:=tui.NewLabel("ID")
+	labelID.SetStyleName("header")
+	labelNT:= tui.NewLabel("Notebook Title")
+	labelNT.SetStyleName("header")
+	labelT:=tui.NewLabel("Note Title")
+	labelT.SetStyleName("header")
+	labelTags:=tui.NewLabel("Tags")
+	labelTags.SetStyleName("header")
+	notesInfoHeader.AppendRow(labelID, labelNT, labelT, labelTags)
+	//unselect it
+	notesInfoHeader.Select(-1)
+
+	theme.SetStyle("label.header", tui.Style{Bold: tui.DecorationOn, Bg: tui.ColorDefault, Fg: tui.ColorBlue})
+
 
 	notesInfo := tui.NewTable(0, 0)
 	notesInfo.SetColumnStretch(0, 1)
@@ -59,6 +83,10 @@ func printNotes2Terminal(jNotes []*jsonNote) {
 	notesInfo.SetColumnStretch(2, 3)
 	notesInfo.SetColumnStretch(3, 2)
 	notesInfo.SetFocused(true)
+
+	footer := tui.NewLabel("Press 'U' to update a note, 'D' to delete it or 'Esc' to exit.")
+	footer.SetStyleName("footer")
+	theme.SetStyle("label.footer", tui.Style{Bg: tui.ColorDefault, Fg: tui.ColorRed})
 
 	for _, note := range jNotes {
 		notesInfo.AppendRow(
@@ -81,9 +109,13 @@ func printNotes2Terminal(jNotes []*jsonNote) {
 	dates := tui.NewTable(0, 0)
 	dates.AppendRow(tui.NewLabel("Created:"), created, tui.NewLabel("Last Updated:"), lastUpdated)
 	dates.SetSizePolicy(tui.Expanding, tui.Minimum)
+	//unselect it
+	dates.Select(-1)
 
 	mainPart := tui.NewVBox(memo, dates)
 	mainPart.SetSizePolicy(tui.Expanding, tui.Expanding)
+	mainPart.SetBorder(true)
+	mainPart.SetTitle("Note")
 
 	notesInfo.OnSelectionChanged(func(t *tui.Table) {
 		n := jNotes[t.Selected()]
@@ -91,16 +123,49 @@ func printNotes2Terminal(jNotes []*jsonNote) {
 		lastUpdated.SetText(n.LastUpdated.Format("Jan 2 2006 15:04"))
 		memo.SetText(n.Memo)
 	})
-	notesInfo.Select(0)
+	notesInfo.Select(0)	
+	
+	scrollNotesInfo := tui.NewScrollArea(notesInfo)
+	scrollNotesInfo.SetSizePolicy(tui.Maximum, tui.Minimum)
 
-	root := tui.NewVBox(notesInfoHeader, notesInfo, tui.NewLabel(""), mainPart)
-
+	root := tui.NewVBox(notesInfoHeader, scrollNotesInfo, mainPart, footer)
 	ui, err := tui.New(root)
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	ui.SetTheme(theme)
+	//TODO: stop scrolling at the start/end
 	ui.SetKeybinding("Esc", func() { ui.Quit() })
+	ui.SetKeybinding("Ctrl+E", func() { 
+		scrollNotesInfo.Scroll(0, -1) 
+	})
+	ui.SetKeybinding("Ctrl+Y", func() { 
+		scrollNotesInfo.Scroll(0, 1) 
+	})
+
+	ui.SetKeybinding("Up", func() {
+		if notesInfo.Selected() != 0 {
+			notesInfo.Select(notesInfo.Selected() - 1) 
+		}
+	})
+	ui.SetKeybinding("Down", func() { 
+		if notesInfo.Selected() < len(jNotes) -1{
+			notesInfo.Select(notesInfo.Selected() + 1) 
+		}
+	})
+
+	ui.SetKeybinding("D", func() {
+		toBeDeleted := jNotes[notesInfo.Selected()]
+		notesInfo.RemoveRow(notesInfo.Selected()) 
+		delete([]int64{toBeDeleted.ID})
+	 })
+
+	 ui.SetKeybinding("U", func() {
+		toBeUpdated := jNotes[notesInfo.Selected()]
+		ui.Quit()
+		update(toBeUpdated.ID, toBeUpdated.Title, toBeUpdated.Tags, toBeUpdated.NotebookTitle, viEditor)
+	 })
+
 
 	if err := ui.Run(); err != nil {
 		log.Fatal(err)
