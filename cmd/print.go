@@ -134,23 +134,29 @@ func printNotes2Terminal(jNotes []*jsonNote) {
 		log.Fatal(err)
 	}
 	ui.SetTheme(theme)
-	//TODO: stop scrolling at the start/end
-	ui.SetKeybinding("Esc", func() { ui.Quit() })
-	ui.SetKeybinding("Ctrl+E", func() { 
-		scrollNotesInfo.Scroll(0, -1) 
-	})
-	ui.SetKeybinding("Ctrl+Y", func() { 
-		scrollNotesInfo.Scroll(0, 1) 
-	})
 
 	ui.SetKeybinding("Up", func() {
-		if notesInfo.Selected() != 0 {
-			notesInfo.Select(notesInfo.Selected() - 1) 
+		windowSize := scrollNotesInfo.SizeHint().Y
+		index := notesInfo.Selected()
+		if index > 0 {
+			notesInfo.Select( index - 1) 
+			if ( index > windowSize){
+				scrollNotesInfo.Scroll(0, -1) 
+			} else {
+				scrollNotesInfo.ScrollToTop()
+			}
 		}
 	})
 	ui.SetKeybinding("Down", func() { 
-		if notesInfo.Selected() < len(jNotes) -1{
-			notesInfo.Select(notesInfo.Selected() + 1) 
+		windowSize := scrollNotesInfo.SizeHint().Y
+		index := notesInfo.Selected()
+		if index < len(jNotes) -1{
+			notesInfo.Select(index + 1) 
+			if ( index < len(jNotes) - windowSize){
+				scrollNotesInfo.Scroll(0, 1) 
+			} else {
+				scrollNotesInfo.ScrollToBottom()
+			}
 		}
 	})
 
