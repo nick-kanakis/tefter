@@ -4,9 +4,9 @@ import (
 	"github.com/marcusolsson/tui-go"
 	"github.com/spf13/cobra"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
-	"sort"
 )
 
 var printCmd = &cobra.Command{
@@ -48,7 +48,7 @@ func printNotes2Terminal(jNotes []*jsonNote) {
 		return
 	}
 	//Sort By date (descenting)
-	sort.Slice(jNotes, func(i, j int) bool{
+	sort.Slice(jNotes, func(i, j int) bool {
 		return jNotes[i].LastUpdated.After(jNotes[j].LastUpdated)
 	})
 
@@ -62,20 +62,18 @@ func printNotes2Terminal(jNotes []*jsonNote) {
 	notesInfoHeader.SetColumnStretch(2, 3)
 	notesInfoHeader.SetColumnStretch(3, 2)
 
-	labelID:=tui.NewLabel("ID")
+	labelID := tui.NewLabel("ID")
 	labelID.SetStyleName("header")
-	labelNT:= tui.NewLabel("Notebook Title")
+	labelNT := tui.NewLabel("Notebook Title")
 	labelNT.SetStyleName("header")
-	labelT:=tui.NewLabel("Note Title")
+	labelT := tui.NewLabel("Note Title")
 	labelT.SetStyleName("header")
-	labelTags:=tui.NewLabel("Tags")
+	labelTags := tui.NewLabel("Tags")
 	labelTags.SetStyleName("header")
 	notesInfoHeader.AppendRow(labelID, labelNT, labelT, labelTags)
 	//unselect it
 	notesInfoHeader.Select(-1)
-
 	theme.SetStyle("label.header", tui.Style{Bold: tui.DecorationOn, Bg: tui.ColorDefault, Fg: tui.ColorBlue})
-
 
 	notesInfo := tui.NewTable(0, 0)
 	notesInfo.SetColumnStretch(0, 1)
@@ -84,7 +82,7 @@ func printNotes2Terminal(jNotes []*jsonNote) {
 	notesInfo.SetColumnStretch(3, 2)
 	notesInfo.SetFocused(true)
 
-	footer := tui.NewLabel("Press 'U' to update a note, 'D' to delete it or 'Esc' to exit.")
+	footer := tui.NewLabel("Press 'Ctrl+U' to update a note, 'Ctrl+D' to delete it or 'Esc' to exit.")
 	footer.SetStyleName("footer")
 	theme.SetStyle("label.footer", tui.Style{Bg: tui.ColorDefault, Fg: tui.ColorRed})
 
@@ -123,8 +121,8 @@ func printNotes2Terminal(jNotes []*jsonNote) {
 		lastUpdated.SetText(n.LastUpdated.Format("Jan 2 2006 15:04"))
 		memo.SetText(n.Memo)
 	})
-	notesInfo.Select(0)	
-	
+	notesInfo.Select(0)
+
 	scrollNotesInfo := tui.NewScrollArea(notesInfo)
 	scrollNotesInfo.SetSizePolicy(tui.Maximum, tui.Minimum)
 
@@ -134,44 +132,106 @@ func printNotes2Terminal(jNotes []*jsonNote) {
 		log.Fatal(err)
 	}
 	ui.SetTheme(theme)
+	//DefaultFocusChain not working so this is a work around
+	formItems := make([]tui.Widget, 0)
+
+	ui.SetKeybinding("Esc", func() { ui.Quit() })
 
 	ui.SetKeybinding("Up", func() {
 		windowSize := scrollNotesInfo.SizeHint().Y
 		index := notesInfo.Selected()
 		if index > 0 {
-			notesInfo.Select( index - 1) 
-			if ( index > windowSize){
-				scrollNotesInfo.Scroll(0, -1) 
+			notesInfo.Select(index - 1)
+			if index > windowSize {
+				scrollNotesInfo.Scroll(0, -1)
 			} else {
 				scrollNotesInfo.ScrollToTop()
 			}
 		}
 	})
-	ui.SetKeybinding("Down", func() { 
+	ui.SetKeybinding("Down", func() {
 		windowSize := scrollNotesInfo.SizeHint().Y
 		index := notesInfo.Selected()
-		if index < len(jNotes) -1{
-			notesInfo.Select(index + 1) 
-			if ( index < len(jNotes) - windowSize){
-				scrollNotesInfo.Scroll(0, 1) 
+		if index < len(jNotes)-1 {
+			notesInfo.Select(index + 1)
+			if index < len(jNotes)-windowSize {
+				scrollNotesInfo.Scroll(0, 1)
 			} else {
 				scrollNotesInfo.ScrollToBottom()
 			}
 		}
 	})
 
-	ui.SetKeybinding("D", func() {
+	ui.SetKeybinding("Ctrl+D", func() {
 		toBeDeleted := jNotes[notesInfo.Selected()]
-		notesInfo.RemoveRow(notesInfo.Selected()) 
+		notesInfo.RemoveRow(notesInfo.Selected())
 		delete([]int64{toBeDeleted.ID})
-	 })
+	})
 
-	 ui.SetKeybinding("U", func() {
+	ui.SetKeybinding("Tab", func() {
+		var current int
+		var currentWidget tui.Widget
+		if formItems == nil || len(formItems) == 0 {
+			return
+		}
+		for i, w := range formItems {
+			if w != nil && w.IsFocused() {
+				current = i
+				currentWidget = w
+			}
+		}
+		if current != len(formItems)-1 {
+			formItems[current+1].SetFocused(true)
+		} else {
+			formItems[0].SetFocused(true)
+		}
+		currentWidget.SetFocused(false)
+	})
+
+	ui.SetKeybinding("Ctrl+U", func() {
 		toBeUpdated := jNotes[notesInfo.Selected()]
-		ui.Quit()
-		update(toBeUpdated.ID, toBeUpdated.Title, toBeUpdated.Tags, toBeUpdated.NotebookTitle, viEditor)
-	 })
 
+		title := tui.NewEntry()
+		title.SetFocused(true)
+		title.SetText(toBeUpdated.Title)
+		formItems = append(formItems, title)
+
+		notebookTitle := tui.NewEntry()
+		notebookTitle.SetText(toBeUpdated.NotebookTitle)
+		formItems = append(formItems, notebookTitle)
+
+		form := tui.NewGrid(0, 0)
+		form.AppendRow(tui.NewLabel("Note title:"), title)
+		form.AppendRow(tui.NewLabel("Notebook title:"), notebookTitle)
+		form.SetSizePolicy(tui.Maximum, tui.Maximum)
+
+		//TODO: focused button must change color
+		continueBtn := tui.NewButton("[Continue]")
+		formItems = append(formItems, continueBtn)
+		continueBtn.OnActivated(func(b *tui.Button) {
+			ui.Quit()
+			update(toBeUpdated.ID, title.Text(), toBeUpdated.Tags, notebookTitle.Text(), viEditor)
+		})
+
+		cancelBtn := tui.NewButton("[Cancel]")
+		formItems = append(formItems, cancelBtn)
+		cancelBtn.OnActivated(func(b *tui.Button) {
+			ui.SetWidget(root)
+		})
+
+		buttons := tui.NewHBox(
+			tui.NewSpacer(),
+			tui.NewPadder(5, 3, continueBtn),
+			tui.NewPadder(5, 3, cancelBtn),
+		)
+
+		window := tui.NewVBox(form, tui.NewSpacer(), buttons)
+		window.SetBorder(true)
+		window.SetSizePolicy(tui.Expanding, tui.Expanding)
+		window.SetSizePolicy(tui.Expanding, tui.Expanding)
+		ui.SetWidget(window)
+
+	})
 
 	if err := ui.Run(); err != nil {
 		log.Fatal(err)
