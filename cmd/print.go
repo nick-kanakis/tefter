@@ -55,6 +55,7 @@ func printNotes2Terminal(jNotes []*jsonNote) {
 	theme := tui.NewTheme()
 	selected := tui.Style{Bg: tui.ColorWhite, Fg: tui.ColorBlack}
 	theme.SetStyle("table.cell.selected", selected)
+	theme.SetStyle("button.focused", selected)
 
 	notesInfoHeader := tui.NewTable(0, 0)
 	notesInfoHeader.SetColumnStretch(0, 1)
@@ -205,7 +206,6 @@ func printNotes2Terminal(jNotes []*jsonNote) {
 		form.AppendRow(tui.NewLabel("Notebook title:"), notebookTitle)
 		form.SetSizePolicy(tui.Maximum, tui.Maximum)
 
-		//TODO: focused button must change color
 		continueBtn := tui.NewButton("[Continue]")
 		formItems = append(formItems, continueBtn)
 		continueBtn.OnActivated(func(b *tui.Button) {
