@@ -44,105 +44,91 @@ func init() {
 }
 
 func printNotes2Terminal(jNotes []*jsonNote) {
-	if len(jNotes) <= 0 {
+	ui := createUI(jNotes)
+	if ui == nil {
 		return
+	}
+	if err := ui.Run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func createUI(jNotes []*jsonNote) tui.UI {
+	if len(jNotes) == 0 {
+		return nil
 	}
 	//Sort By date (descenting)
 	sort.Slice(jNotes, func(i, j int) bool {
 		return jNotes[i].LastUpdated.After(jNotes[j].LastUpdated)
 	})
+	//Create header & footer
+	header, footer := constructHeaderFooter()
 
-	theme := tui.NewTheme()
-	selected := tui.Style{Bg: tui.ColorWhite, Fg: tui.ColorBlack}
-	theme.SetStyle("table.cell.selected", selected)
-	theme.SetStyle("button.focused", selected)
-
-	notesInfoHeader := tui.NewTable(0, 0)
-	notesInfoHeader.SetColumnStretch(0, 1)
-	notesInfoHeader.SetColumnStretch(1, 2)
-	notesInfoHeader.SetColumnStretch(2, 3)
-	notesInfoHeader.SetColumnStretch(3, 2)
-
-	labelID := tui.NewLabel("ID")
-	labelID.SetStyleName("header")
-	labelNT := tui.NewLabel("Notebook Title")
-	labelNT.SetStyleName("header")
-	labelT := tui.NewLabel("Note Title")
-	labelT.SetStyleName("header")
-	labelTags := tui.NewLabel("Tags")
-	labelTags.SetStyleName("header")
-	notesInfoHeader.AppendRow(labelID, labelNT, labelT, labelTags)
-	//unselect it
-	notesInfoHeader.Select(-1)
-	theme.SetStyle("label.header", tui.Style{Bold: tui.DecorationOn, Bg: tui.ColorDefault, Fg: tui.ColorBlue})
-
-	notesInfo := tui.NewTable(0, 0)
-	notesInfo.SetColumnStretch(0, 1)
-	notesInfo.SetColumnStretch(1, 2)
-	notesInfo.SetColumnStretch(2, 3)
-	notesInfo.SetColumnStretch(3, 2)
-	notesInfo.SetFocused(true)
-
-	footer := tui.NewLabel("Press 'Ctrl+U' to update a note, 'Ctrl+D' to delete it or 'Esc' to exit.")
-	footer.SetStyleName("footer")
-	theme.SetStyle("label.footer", tui.Style{Bg: tui.ColorDefault, Fg: tui.ColorRed})
-
-	for _, note := range jNotes {
-		notesInfo.AppendRow(
-			//Note ID
-			tui.NewLabel(strconv.Itoa(int(note.ID))),
-			//Notebook title
-			tui.NewLabel(note.NotebookTitle),
-			//Note title
-			tui.NewLabel(note.Title),
-			//Note tags
-			tui.NewLabel(strings.Join(note.Tags, ",")),
-		)
-	}
+	//Create memo area
 	memo := tui.NewLabel("")
 	memo.SetSizePolicy(tui.Expanding, tui.Expanding)
 
+	//Create dates row
 	var created = tui.NewLabel("")
 	var lastUpdated = tui.NewLabel("")
+	datesRow := constructDatesRow(created, lastUpdated)
 
-	dates := tui.NewTable(0, 0)
-	dates.AppendRow(tui.NewLabel("Created:"), created, tui.NewLabel("Last Updated:"), lastUpdated)
-	dates.SetSizePolicy(tui.Expanding, tui.Minimum)
-	//unselect it
-	dates.Select(-1)
-
-	mainPart := tui.NewVBox(memo, dates)
+	//Main part consist of memo + dates row
+	mainPart := tui.NewVBox(memo, datesRow)
 	mainPart.SetSizePolicy(tui.Expanding, tui.Expanding)
 	mainPart.SetBorder(true)
 	mainPart.SetTitle("Note")
 
-	notesInfo.OnSelectionChanged(func(t *tui.Table) {
-		n := jNotes[t.Selected()]
-		created.SetText(n.Created.Format("Jan 2 2006 15:04"))
-		lastUpdated.SetText(n.LastUpdated.Format("Jan 2 2006 15:04"))
-		memo.SetText(n.Memo)
-	})
-	notesInfo.Select(0)
-
-	scrollNotesInfo := tui.NewScrollArea(notesInfo)
+	//Create list of notes to select from + make the list scrollable
+	notesInfoList := constructNotesList(jNotes, created, lastUpdated, memo)
+	scrollNotesInfo := tui.NewScrollArea(notesInfoList)
 	scrollNotesInfo.SetSizePolicy(tui.Maximum, tui.Minimum)
 
-	root := tui.NewVBox(notesInfoHeader, scrollNotesInfo, mainPart, footer)
+	//Join everything together and run the UI
+	root := tui.NewVBox(header, scrollNotesInfo, mainPart, footer)
 	ui, err := tui.New(root)
 	if err != nil {
 		log.Fatal(err)
 	}
-	ui.SetTheme(theme)
-	//DefaultFocusChain not working so this is a work around
+
+	//Set theme
+	initializeTheme(ui)
+
+	//FIXME: DefaultFocusChain not working so this is a workaround
 	formItems := make([]tui.Widget, 0)
 
+	//Create the key bindings
+	initializeKeyBinding(ui, scrollNotesInfo, notesInfoList, jNotes, formItems, root)
+
+	return ui
+}
+
+func initializeTheme(ui tui.UI) {
+	theme := tui.NewTheme()
+	selected := tui.Style{Bg: tui.ColorWhite, Fg: tui.ColorBlack}
+	theme.SetStyle("table.cell.selected", selected)
+	theme.SetStyle("button.focused", selected)
+	header := tui.Style{Bold: tui.DecorationOn, Bg: tui.ColorDefault, Fg: tui.ColorBlue}
+	theme.SetStyle("label.header", header)
+	footer := tui.Style{Bg: tui.ColorDefault, Fg: tui.ColorRed}
+	theme.SetStyle("label.footer", footer)
+	ui.SetTheme(theme)
+
+}
+
+func initializeKeyBinding(ui tui.UI, scrollNotesInfo *tui.ScrollArea, notesInfo *tui.Table, jNotes []*jsonNote, formItems []tui.Widget, root *tui.Box) {
+	//Esc
 	ui.SetKeybinding("Esc", func() { ui.Quit() })
 
+	//Up arrow
 	ui.SetKeybinding("Up", func() {
 		windowSize := scrollNotesInfo.SizeHint().Y
 		index := notesInfo.Selected()
 		if index > 0 {
 			notesInfo.Select(index - 1)
+			if len(jNotes) <= windowSize {
+				return
+			}
 			if index > windowSize {
 				scrollNotesInfo.Scroll(0, -1)
 			} else {
@@ -150,11 +136,16 @@ func printNotes2Terminal(jNotes []*jsonNote) {
 			}
 		}
 	})
+
+	//Down arrow
 	ui.SetKeybinding("Down", func() {
 		windowSize := scrollNotesInfo.SizeHint().Y
 		index := notesInfo.Selected()
 		if index < len(jNotes)-1 {
 			notesInfo.Select(index + 1)
+			if len(jNotes) <= windowSize {
+				return
+			}
 			if index < len(jNotes)-windowSize {
 				scrollNotesInfo.Scroll(0, 1)
 			} else {
@@ -163,32 +154,18 @@ func printNotes2Terminal(jNotes []*jsonNote) {
 		}
 	})
 
+	//Ctrl + D
 	ui.SetKeybinding("Ctrl+D", func() {
-		toBeDeleted := jNotes[notesInfo.Selected()]
-		notesInfo.RemoveRow(notesInfo.Selected())
+		index := notesInfo.Selected()
+		toBeDeleted := jNotes[index]
+		notesInfo.RemoveRow(index)
+		jNotes = append(jNotes[:index], jNotes[index+1:]...)
+		notesInfo.Select(index)
+
 		delete([]int64{toBeDeleted.ID})
 	})
 
-	ui.SetKeybinding("Tab", func() {
-		var current int
-		var currentWidget tui.Widget
-		if formItems == nil || len(formItems) == 0 {
-			return
-		}
-		for i, w := range formItems {
-			if w != nil && w.IsFocused() {
-				current = i
-				currentWidget = w
-			}
-		}
-		if current != len(formItems)-1 {
-			formItems[current+1].SetFocused(true)
-		} else {
-			formItems[0].SetFocused(true)
-		}
-		currentWidget.SetFocused(false)
-	})
-
+	//Ctrl + U
 	ui.SetKeybinding("Ctrl+U", func() {
 		toBeUpdated := jNotes[notesInfo.Selected()]
 
@@ -230,10 +207,91 @@ func printNotes2Terminal(jNotes []*jsonNote) {
 		window.SetSizePolicy(tui.Expanding, tui.Expanding)
 		window.SetSizePolicy(tui.Expanding, tui.Expanding)
 		ui.SetWidget(window)
-
 	})
 
-	if err := ui.Run(); err != nil {
-		log.Fatal(err)
+	ui.SetKeybinding("Tab", func() {
+		var current int
+		var currentWidget tui.Widget
+		if formItems == nil || len(formItems) == 0 {
+			return
+		}
+		for i, w := range formItems {
+			if w != nil && w.IsFocused() {
+				current = i
+				currentWidget = w
+			}
+		}
+		if current != len(formItems)-1 {
+			formItems[current+1].SetFocused(true)
+		} else {
+			formItems[0].SetFocused(true)
+		}
+		currentWidget.SetFocused(false)
+	})
+}
+
+func constructHeaderFooter() (*tui.Table, *tui.Label) {
+	header := tui.NewTable(0, 0)
+	header.SetColumnStretch(0, 1)
+	header.SetColumnStretch(1, 2)
+	header.SetColumnStretch(2, 3)
+	header.SetColumnStretch(3, 2)
+
+	labelID := tui.NewLabel("ID")
+	labelID.SetStyleName("header")
+	labelNT := tui.NewLabel("Notebook Title")
+	labelNT.SetStyleName("header")
+	labelT := tui.NewLabel("Note Title")
+	labelT.SetStyleName("header")
+	labelTags := tui.NewLabel("Tags")
+	labelTags.SetStyleName("header")
+	header.AppendRow(labelID, labelNT, labelT, labelTags)
+	//unselect it
+	header.Select(-1)
+
+	footer := tui.NewLabel("Press 'Ctrl+U' to update a note, 'Ctrl+D' to delete it or 'Esc' to exit.")
+	footer.SetStyleName("footer")
+
+	return header, footer
+}
+
+func constructNotesList(jNotes []*jsonNote, created, lastUpdated, memo *tui.Label) *tui.Table {
+	notesInfoList := tui.NewTable(0, 0)
+	notesInfoList.SetColumnStretch(0, 1)
+	notesInfoList.SetColumnStretch(1, 2)
+	notesInfoList.SetColumnStretch(2, 3)
+	notesInfoList.SetColumnStretch(3, 2)
+	notesInfoList.SetFocused(true)
+
+	for _, note := range jNotes {
+		notesInfoList.AppendRow(
+			//Note ID
+			tui.NewLabel(strconv.Itoa(int(note.ID))),
+			//Notebook title
+			tui.NewLabel(note.NotebookTitle),
+			//Note title
+			tui.NewLabel(note.Title),
+			//Note tags
+			tui.NewLabel(strings.Join(note.Tags, ",")),
+		)
 	}
+
+	notesInfoList.OnSelectionChanged(func(t *tui.Table) {
+		n := jNotes[t.Selected()]
+		created.SetText(n.Created.Format("Jan 2 2006 15:04"))
+		lastUpdated.SetText(n.LastUpdated.Format("Jan 2 2006 15:04"))
+		memo.SetText(n.Memo)
+	})
+	notesInfoList.Select(0)
+
+	return notesInfoList
+}
+
+func constructDatesRow(created, lastUpdated *tui.Label) *tui.Table {
+	dates := tui.NewTable(0, 0)
+	dates.AppendRow(tui.NewLabel("Created:"), created, tui.NewLabel("Last Updated:"), lastUpdated)
+	dates.SetSizePolicy(tui.Expanding, tui.Minimum)
+	//unselect it
+	dates.Select(-1)
+	return dates
 }
