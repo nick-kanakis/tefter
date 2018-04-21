@@ -8,6 +8,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"fmt"
+	"os"
 )
 
 var printCmd = &cobra.Command{
@@ -46,6 +48,10 @@ func init() {
 
 func printNotes2Terminal(jNotes []*jsonNote) {
 	uiApp := createUI(jNotes)
+	if uiApp == nil{
+		fmt.Println("No notes to display")
+		os.Exit(0)		
+	}
 
 	if err := uiApp.Run(); err != nil {
 		log.Fatal(err)
@@ -53,6 +59,7 @@ func printNotes2Terminal(jNotes []*jsonNote) {
 }
 
 func createUI(jNotes []*jsonNote) *tview.Application {
+	app := tview.NewApplication()
 	if len(jNotes) == 0 {
 		return nil
 	}
@@ -60,34 +67,39 @@ func createUI(jNotes []*jsonNote) *tview.Application {
 	sort.Slice(jNotes, func(i, j int) bool {
 		return jNotes[i].LastUpdated.After(jNotes[j].LastUpdated)
 	})
-	app := tview.NewApplication()
-	notesTable := tview.NewTable()
-	notesTable.SetFixed(1, 0)
-	notesTable.SetSelectable(true, false)
+	notesTable := constructNotesTable(jNotes)
 	notesFlex := tview.NewFlex()
 	notesFlex.SetDirection(tview.FlexRow)
 	numberOfVisibleRows := 5
 	notesFlex.AddItem(notesTable, numberOfVisibleRows, 1, true)
 
-	memo := tview.NewTextView()
-	memo.SetBorder(true)
-	memo.SetWordWrap(true)
-	memo.SetBorderPadding(0, 0, 0, 0)
-	memo.SetTextAlign(tview.AlignLeft)
-	memo.SetText(jNotes[0].Memo)
-
-	dates := tview.NewTable()
-	dates.SetSelectable(false, false)
-	dates.SetCell(0, 0, &tview.TableCell{Text: "Created: ", Align: tview.AlignLeft, Color: tcell.ColorRed, Expansion: 1})
-	dates.SetCell(0, 1, &tview.TableCell{Text: jNotes[0].Created.Format("Jan 2 2006 15:04"), Align: tview.AlignLeft, Color: tcell.ColorRed, Expansion: 1})
-	dates.SetCell(0, 2, &tview.TableCell{Text: "Updated: ", Align: tview.AlignLeft, Color: tcell.ColorRed, Expansion: 1})
-	dates.SetCell(0, 3, &tview.TableCell{Text: jNotes[0].LastUpdated.Format("Jan 2 2006 15:04"), Align: tview.AlignLeft, Color: tcell.ColorRed, Expansion: 1})
-
+	
+	memo := constructMemo(jNotes)
+	dates := constructDatesRow(jNotes)
+	
 	flex := tview.NewFlex()
 	flex.SetDirection(tview.FlexRow)
 	flex.AddItem(notesFlex, numberOfVisibleRows, 1, true)
 	flex.AddItem(memo, 0, 3, false)
 	flex.AddItem(dates, 1, 1, false)
+
+	notesTable.SetSelectionChangedFunc(func(row, column int) {
+		if row >= 0 {
+			selectedNote := jNotes[row-1]
+			memo.SetText(selectedNote.Memo)
+			dates.SetCell(0, 1, &tview.TableCell{Text: selectedNote.Created.Format("Jan 2 2006 15:04"), Align: tview.AlignLeft, Color: tcell.ColorRed, Expansion: 2})
+			dates.SetCell(0, 3, &tview.TableCell{Text: selectedNote.LastUpdated.Format("Jan 2 2006 15:04"), Align: tview.AlignLeft, Color: tcell.ColorRed, Expansion: 2})
+		}
+	})
+	app.SetRoot(flex, true)
+	return app
+}
+
+
+func constructNotesTable(jNotes []*jsonNote) *tview.Table{
+	notesTable := tview.NewTable()
+	notesTable.SetFixed(1, 0)
+	notesTable.SetSelectable(true, false)
 
 	//set header
 	idCell := &tview.TableCell{Text: "ID", Align: tview.AlignLeft, Color: tcell.ColorBlue, Expansion: 1, NotSelectable: true}
@@ -106,17 +118,28 @@ func createUI(jNotes []*jsonNote) *tview.Application {
 		notesTable.SetCell(row+1, 3, &tview.TableCell{Text: strings.Join(jNotes[row].Tags, ","), Align: tview.AlignLeft, Color: tcell.ColorLimeGreen, Expansion: 2})
 
 	}
-	notesTable.SetSelectionChangedFunc(func(row, column int) {
-		if row < 0 {
-			return
-		}
-		selectedNote := jNotes[row-1]
-		memo.SetText(selectedNote.Memo)
-		dates.SetCell(0, 1, &tview.TableCell{Text: selectedNote.Created.Format("Jan 2 2006 15:04"), Align: tview.AlignLeft, Color: tcell.ColorRed, Expansion: 2})
-		dates.SetCell(0, 3, &tview.TableCell{Text: selectedNote.LastUpdated.Format("Jan 2 2006 15:04"), Align: tview.AlignLeft, Color: tcell.ColorRed, Expansion: 2})
-	})
 
-	app.SetRoot(flex, true)
+	return notesTable
+}
 
-	return app
+func constructMemo(jNotes []*jsonNote) *tview.TextView{
+	memo := tview.NewTextView()
+	memo.SetBorder(true)
+	memo.SetWordWrap(true)
+	memo.SetBorderPadding(0, 0, 0, 0)
+	memo.SetTextAlign(tview.AlignLeft)
+	memo.SetText(jNotes[0].Memo)
+
+	return memo
+}
+
+func constructDatesRow(jNotes []*jsonNote) *tview.Table {
+	dates := tview.NewTable()
+	dates.SetSelectable(false, false)
+	dates.SetCell(0, 0, &tview.TableCell{Text: "Created: ", Align: tview.AlignLeft, Color: tcell.ColorRed, Expansion: 1})
+	dates.SetCell(0, 1, &tview.TableCell{Text: jNotes[0].Created.Format("Jan 2 2006 15:04"), Align: tview.AlignLeft, Color: tcell.ColorRed, Expansion: 1})
+	dates.SetCell(0, 2, &tview.TableCell{Text: "Updated: ", Align: tview.AlignLeft, Color: tcell.ColorRed, Expansion: 1})
+	dates.SetCell(0, 3, &tview.TableCell{Text: jNotes[0].LastUpdated.Format("Jan 2 2006 15:04"), Align: tview.AlignLeft, Color: tcell.ColorRed, Expansion: 1})
+	
+	return dates;
 }
