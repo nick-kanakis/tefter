@@ -1,15 +1,15 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/gdamore/tcell"
 	"github.com/rivo/tview"
 	"github.com/spf13/cobra"
 	"log"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
-	"fmt"
-	"os"
 )
 
 var printCmd = &cobra.Command{
@@ -48,9 +48,9 @@ func init() {
 
 func printNotes2Terminal(jNotes []*jsonNote) {
 	uiApp := createUI(jNotes)
-	if uiApp == nil{
+	if uiApp == nil {
 		fmt.Println("No notes to display")
-		os.Exit(0)		
+		os.Exit(0)
 	}
 
 	if err := uiApp.Run(); err != nil {
@@ -73,30 +73,80 @@ func createUI(jNotes []*jsonNote) *tview.Application {
 	numberOfVisibleRows := 5
 	notesFlex.AddItem(notesTable, numberOfVisibleRows, 1, true)
 
-	
 	memo := constructMemo(jNotes)
 	dates := constructDatesRow(jNotes)
-	
-	flex := tview.NewFlex()
-	flex.SetDirection(tview.FlexRow)
-	flex.AddItem(notesFlex, numberOfVisibleRows, 1, true)
-	flex.AddItem(memo, 0, 3, false)
-	flex.AddItem(dates, 1, 1, false)
+	help := constructHelpLine()
+
+	flexLayout := tview.NewFlex()
+	flexLayout.SetDirection(tview.FlexRow)
+	flexLayout.AddItem(notesFlex, numberOfVisibleRows, 1, true)
+	flexLayout.AddItem(memo, 0, 3, false)
+	flexLayout.AddItem(dates, 1, 1, false)
+	flexLayout.AddItem(help, 1, 1, false)
+
+	pages := tview.NewPages()
+	pages.AddPage("notes", flexLayout, true, true)
 
 	notesTable.SetSelectionChangedFunc(func(row, column int) {
 		if row >= 0 {
 			selectedNote := jNotes[row-1]
 			memo.SetText(selectedNote.Memo)
-			dates.SetCell(0, 1, &tview.TableCell{Text: selectedNote.Created.Format("Jan 2 2006 15:04"), Align: tview.AlignLeft, Color: tcell.ColorRed, Expansion: 2})
-			dates.SetCell(0, 3, &tview.TableCell{Text: selectedNote.LastUpdated.Format("Jan 2 2006 15:04"), Align: tview.AlignLeft, Color: tcell.ColorRed, Expansion: 2})
+			dates.SetCell(0, 1, &tview.TableCell{Text: selectedNote.Created.Format("Jan 2 2006 15:04"), Align: tview.AlignLeft, Color: tcell.ColorDefault, Expansion: 2})
+			dates.SetCell(0, 3, &tview.TableCell{Text: selectedNote.LastUpdated.Format("Jan 2 2006 15:04"), Align: tview.AlignLeft, Color: tcell.ColorDefault, Expansion: 2})
 		}
 	})
-	app.SetRoot(flex, true)
+	app.SetRoot(pages, true)
+
+	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		switch event.Key() {
+		case tcell.KeyCtrlD:
+			row, _ := notesTable.GetSelection()
+			if notesTable.GetRowCount() > 1 {
+				noteIndex := row - 1
+				toBeDelete := jNotes[noteIndex]
+				jNotes = append(jNotes[:noteIndex], jNotes[noteIndex+1:]...)
+				delete([]int64{toBeDelete.ID})
+				notesFlex.RemoveItem(notesTable)
+				notesTable = constructNotesTable(jNotes)
+				notesFlex.AddItem(notesTable, numberOfVisibleRows, 1, true)
+			}
+		case tcell.KeyCtrlU:
+			row, _ := notesTable.GetSelection()
+			if notesTable.GetRowCount() > 1 {
+				noteIndex := row - 1
+				toBeUpdated := jNotes[noteIndex]
+				updateForm := constructUpdateForm(toBeUpdated)
+
+				updateForm.AddButton("Continue", func() {
+					notebookTitleInputField := updateForm.GetFormItem(0).(*tview.InputField)
+					noteTitleInputField := updateForm.GetFormItem(1).(*tview.InputField)
+					tagsInputField := updateForm.GetFormItem(2).(*tview.InputField)
+
+					notebookTitle := notebookTitleInputField.GetText()
+					noteTitle := noteTitleInputField.GetText()
+					tagsStr := tagsInputField.GetText()
+					tags := strings.Split(tagsStr, ",")
+
+					app.Suspend(func() {
+						update(toBeUpdated.ID, noteTitle, tags, notebookTitle, viEditor)
+					})
+					//TODO: refresh notes instead of exiting
+					app.Stop()
+				})
+				updateForm.AddButton("Cancel", func() {
+					pages.SwitchToPage("notes")
+				})
+
+				pages.AddAndSwitchToPage("update", updateForm, true)
+			}
+		}
+		return event
+	})
+
 	return app
 }
 
-
-func constructNotesTable(jNotes []*jsonNote) *tview.Table{
+func constructNotesTable(jNotes []*jsonNote) *tview.Table {
 	notesTable := tview.NewTable()
 	notesTable.SetFixed(1, 0)
 	notesTable.SetSelectable(true, false)
@@ -122,7 +172,7 @@ func constructNotesTable(jNotes []*jsonNote) *tview.Table{
 	return notesTable
 }
 
-func constructMemo(jNotes []*jsonNote) *tview.TextView{
+func constructMemo(jNotes []*jsonNote) *tview.TextView {
 	memo := tview.NewTextView()
 	memo.SetBorder(true)
 	memo.SetWordWrap(true)
@@ -136,10 +186,28 @@ func constructMemo(jNotes []*jsonNote) *tview.TextView{
 func constructDatesRow(jNotes []*jsonNote) *tview.Table {
 	dates := tview.NewTable()
 	dates.SetSelectable(false, false)
-	dates.SetCell(0, 0, &tview.TableCell{Text: "Created: ", Align: tview.AlignLeft, Color: tcell.ColorRed, Expansion: 1})
-	dates.SetCell(0, 1, &tview.TableCell{Text: jNotes[0].Created.Format("Jan 2 2006 15:04"), Align: tview.AlignLeft, Color: tcell.ColorRed, Expansion: 1})
-	dates.SetCell(0, 2, &tview.TableCell{Text: "Updated: ", Align: tview.AlignLeft, Color: tcell.ColorRed, Expansion: 1})
-	dates.SetCell(0, 3, &tview.TableCell{Text: jNotes[0].LastUpdated.Format("Jan 2 2006 15:04"), Align: tview.AlignLeft, Color: tcell.ColorRed, Expansion: 1})
-	
-	return dates;
+	dates.SetCell(0, 0, &tview.TableCell{Text: "Created: ", Align: tview.AlignLeft, Color: tcell.ColorDefault, Expansion: 1})
+	dates.SetCell(0, 1, &tview.TableCell{Text: jNotes[0].Created.Format("Jan 2 2006 15:04"), Align: tview.AlignLeft, Color: tcell.ColorDefault, Expansion: 1})
+	dates.SetCell(0, 2, &tview.TableCell{Text: "Updated: ", Align: tview.AlignLeft, Color: tcell.ColorDefault, Expansion: 1})
+	dates.SetCell(0, 3, &tview.TableCell{Text: jNotes[0].LastUpdated.Format("Jan 2 2006 15:04"), Align: tview.AlignLeft, Color: tcell.ColorDefault, Expansion: 1})
+
+	return dates
+}
+
+func constructHelpLine() *tview.TextView {
+	help := tview.NewTextView()
+	help.SetText("Press Ctrl+C to espace, Ctrl+D to delete and Ctrl+U to update a note")
+	help.SetTextAlign(tview.AlignCenter)
+	help.SetTextColor(tcell.ColorRed)
+
+	return help
+}
+
+func constructUpdateForm(jNote *jsonNote) *tview.Form {
+	form := tview.NewForm()
+	form.AddInputField("Notebook Title:", jNote.NotebookTitle, 30, nil, nil)
+	form.AddInputField("Note Title:", jNote.Title, 30, nil, nil)
+	form.AddInputField("Tags:", strings.Join(jNote.Tags, ","), 30, nil, nil)
+
+	return form
 }
