@@ -12,31 +12,32 @@ import (
 	"strings"
 )
 
-var printCmd = &cobra.Command{
-	Use:   "print",
-	Short: "Print notes based on given ids",
-	Long: "There are 4 ways to print a set of notes" +
-		" 1) Give a comma separated list of note ids" +
-		" 2) Give a comma separated list of notebook titles" +
-		" 3) Give a comma separated list of tags," +
-		" 4) If -a or --all flag is set all notes will be printed" +
-		"Press Esc to exit print mode",
-	Example: "print -i 1,2,... -n notebook1,notebook2,... -t tag1,tag2,... ",
-	Run: func(cmd *cobra.Command, args []string) {
+var (
+	ids            []int
+	notebookTitles []string
+	tags           []string
+	printAll       bool
+	printCmd       = &cobra.Command{
+		Use:   "print",
+		Short: "Print notes based on given ids",
+		Long: "There are 4 ways to print a set of notes" +
+			" 1) Give a comma separated list of note ids" +
+			" 2) Give a comma separated list of notebook titles" +
+			" 3) Give a comma separated list of tags," +
+			" 4) If -a or --all flag is set all notes will be printed" +
+			"Press Esc to exit print mode",
+		Example: "print -i 1,2,... -n notebook1,notebook2,... -t tag1,tag2,... ",
+		Run: func(cmd *cobra.Command, args []string) {
 
-		ids, _ := cmd.Flags().GetIntSlice("ids")
-		notebookTitles, _ := cmd.Flags().GetStringSlice("notebook")
-		tags, _ := cmd.Flags().GetStringSlice("tags")
-		printAll, _ := cmd.Flags().GetBool("all")
-
-		notes := collectNotesFromDB(ids, notebookTitles, tags, printAll)
-		jNotes, err := transformNotes2JSONNotes(noteMap2Slice(notes))
-		if err != nil {
-			log.Panicln(err)
-		}
-		printNotes2Terminal(jNotes)
-	},
-}
+			ids, _ = cmd.Flags().GetIntSlice("ids")
+			notebookTitles, _ = cmd.Flags().GetStringSlice("notebook")
+			tags, _ = cmd.Flags().GetStringSlice("tags")
+			printAll, _ = cmd.Flags().GetBool("all")
+			jNotes := collectNotes(ids, notebookTitles, tags, printAll)
+			printNotes2Terminal(jNotes)
+		},
+	}
+)
 
 func init() {
 	rootCmd.AddCommand(printCmd)
@@ -44,6 +45,15 @@ func init() {
 	printCmd.Flags().StringSlice("tags", []string{}, "Comma-separated tags of note.")
 	printCmd.Flags().StringSliceP("notebook", "n", []string{}, "Comma separated list of notebook titles")
 	printCmd.Flags().BoolP("all", "a", false, "Print all notes")
+}
+
+func collectNotes(ids []int, notebookTitles []string, tags []string, printAll bool) []*jsonNote {
+	notes := collectNotesFromDB(ids, notebookTitles, tags, printAll)
+	jNotes, err := transformNotes2JSONNotes(noteMap2Slice(notes))
+	if err != nil {
+		log.Panicln(err)
+	}
+	return jNotes
 }
 
 func printNotes2Terminal(jNotes []*jsonNote) {
@@ -130,8 +140,11 @@ func createUI(jNotes []*jsonNote) *tview.Application {
 					app.Suspend(func() {
 						update(toBeUpdated.ID, noteTitle, tags, notebookTitle, viEditor)
 					})
-					//TODO: refresh notes instead of exiting
 					app.Stop()
+
+					updatedJNotes := collectNotes(ids, notebookTitles, tags, printAll)
+					printNotes2Terminal(updatedJNotes)
+
 				})
 				updateForm.AddButton("Cancel", func() {
 					pages.SwitchToPage("notes")
