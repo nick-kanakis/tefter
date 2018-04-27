@@ -86,6 +86,10 @@ func constructUpdatedNote(note *model.Note, title, notebookTitle string, tags []
 		}
 	}
 	note.RemoveTags(toBeRemoved)
+	//This case handles the update come from the terminal-ui.
+	if len(toBeRemoved) == 0 {
+		note.Tags = make(map[string]bool)
+	}
 	note.AddTags(toBeAdded)
 	if notebookTitle != "" {
 		err := addNotebookToNote(note, notebookTitle)

@@ -9,6 +9,7 @@ func TestCreateUI(t *testing.T) {
 	if createUI(notes) == nil {
 		t.Error("UI should not be nil")
 	}
+
 	if createUI(emptyNotes) != nil {
 		t.Error("Empty notes should return a nil ui")
 	}
