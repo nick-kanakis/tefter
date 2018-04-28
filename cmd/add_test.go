@@ -24,7 +24,10 @@ func TestAdd(t *testing.T) {
 				err: nil,
 			},
 			notebookDB: mockNotebookDBAdd{
-				notebook: &model.Notebook{1, "NotebookTitle", nil},
+				notebook: &model.Notebook{
+					ID: 1, 
+					Title:"NotebookTitle", 
+				},
 				id:       1,
 				err:      nil,
 			},
@@ -101,7 +104,9 @@ func TestAddJSONNote(t *testing.T) {
 				err: nil,
 			},
 			notebookDB: mockNotebookDBAdd{
-				notebook: &model.Notebook{1, "NotebookTitle", nil},
+				notebook: &model.Notebook{
+					ID: 1,
+					Title: "NotebookTitle"},
 				id:       1,
 				err:      nil,
 			},
@@ -132,7 +137,9 @@ func TestAddJSONNote(t *testing.T) {
 				err: errors.New("Unexpected error"),
 			},
 			notebookDB: mockNotebookDBAdd{
-				notebook: &model.Notebook{1, "NotebookTitle", nil},
+				notebook: &model.Notebook{
+					ID:1,
+					Title: "NotebookTitle"},
 				id:       1,
 				err:      nil,
 			},
