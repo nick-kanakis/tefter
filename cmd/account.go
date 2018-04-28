@@ -20,12 +20,12 @@ var (
 		Short: "Add/Delete account",
 	}
 	addAccountCmd = &cobra.Command{
-		Use:   "add username",
+		Use:   "add",
 		Short: "Create new account",
 		Run:   addAccount,
 	}
 	deleteAccountCmd = &cobra.Command{
-		Use:   "delete username",
+		Use:   "delete",
 		Short: "Delete existing account",
 		Args:  cobra.NoArgs,
 		Run:   deleteAccount,
@@ -53,15 +53,15 @@ func addAccount(cmd *cobra.Command, args []string) {
 	pr := terminalPasswordReader{}
 	credentials, err := getCredentials(pr, os.Stdin)
 	if err != nil {
-		log.Panicln(err)
+		log.Fatalln(err)
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword(credentials.password, 10)
 	if err != nil {
-		log.Panicf("Failed hashing password, error msg: %v", err)
+		log.Fatalf("Failed hashing password, error msg: %v", err)
 	}
 	err = AccountDB.CreateAccount(credentials.username, hashedPassword)
 	if err != nil {
-		log.Panicf("Failed creating new account, error msg: %v", err)
+		log.Fatalf("Failed creating new account, error msg: %v", err)
 	}
 }
 
@@ -69,14 +69,14 @@ func deleteAccount(cmd *cobra.Command, args []string) {
 	pr := terminalPasswordReader{}
 	credentials, err := getCredentials(pr, os.Stdin)
 	if err != nil {
-		log.Panicln(err)
+		log.Fatalln(err)
 	}
 	account, err := AccountDB.GetAccount(credentials.username)
 	if err != nil {
-		log.Panicf("Could not delete account for user: %v", credentials.username)
+		log.Fatalf("Could not delete account for user: %v", credentials.username)
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(account.Password), credentials.password); err != nil {
-		log.Panicln("Username and password don't match")
+		log.Fatalln("Username and password don't match")
 	}
 	AccountDB.DeleteAccount(credentials.username)
 	fmt.Printf("Account for user: %v deleted", credentials.username)
@@ -86,6 +86,7 @@ func getAccounts(cmd *cobra.Command, args []string) {
 	usernames := AccountDB.GetUsernames()
 	if len(usernames) == 0 {
 		fmt.Println("DB is empty")
+		return
 	}
 
 	fmt.Println("Current Usernames in DB:")
@@ -109,19 +110,20 @@ func getCredentials(pr passwordReader, input io.Reader) (*credentials, error) {
 
 	fmt.Print("Enter Username: ")
 	username, _ := reader.ReadString('\n')
-
+	username = strings.TrimSpace(username)
+	if len(username) == 0 {
+		return &credentials{}, errors.New("Empty username")
+	}
+	
 	fmt.Print("Enter Password: ")
 	bytePassword, err := pr.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		return &credentials{}, fmt.Errorf("Failed reading password, error msg: %v", err)
 	}
+
 	password := string(bytePassword)
 	if len(password) < 5 {
 		return &credentials{}, errors.New("Password must be at least 5 chars")
 	}
-	if username == "" {
-		return &credentials{}, errors.New("Empty username")
-	}
-
-	return &credentials{strings.TrimSpace(username), bytePassword}, nil
+	return &credentials{username, bytePassword}, nil
 }

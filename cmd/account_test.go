@@ -69,7 +69,7 @@ func TestGetCredentials(t *testing.T) {
 				errors.New("Unexpected Error"),
 			},
 			cred:  &credentials{},
-			input: strings.NewReader(""),
+			input: strings.NewReader("username"),
 			err:   errors.New("Failed reading password, error msg: Unexpected Error"),
 		},
 	}
