@@ -106,9 +106,7 @@ type FakePasswordReader struct {
 	err      error
 }
 
+//FakePasswordReader implements PasswordReader
 func (fpr FakePasswordReader) ReadPassword(fd int) ([]byte, error) {
-	if fpr.err != nil {
-		return nil, fpr.err
-	}
-	return fpr.password, nil
+	return fpr.password, fpr.err
 }

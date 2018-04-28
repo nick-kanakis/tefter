@@ -114,7 +114,7 @@ func getCredentials(pr passwordReader, input io.Reader) (*credentials, error) {
 	if len(username) == 0 {
 		return &credentials{}, errors.New("Empty username")
 	}
-	
+
 	fmt.Print("Enter Password: ")
 	bytePassword, err := pr.ReadPassword(int(syscall.Stdin))
 	if err != nil {
