@@ -32,31 +32,32 @@ func addWrapper(cmd *cobra.Command, args []string) {
 	title, _ := cmd.Flags().GetString("title")
 	tags, _ := cmd.Flags().GetStringSlice("tags")
 	notebookTitle, _ := cmd.Flags().GetString("notebook")
-	add(title, tags, notebookTitle, viEditor)
+	editor := &viEditor{}
+	err := add(title, tags, notebookTitle, editor)
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
 
-func add(title string, tags []string, notebookTitle string, editor func(text string) string) {
-	memo := editor("")
+func add(title string, tags []string, notebookTitle string, editor Editor) error {
+	memo := editor.edit("")
 
-	//All newNotes will be inserted to default notebook
-	//In next steps the notebook may change see addNotebookToNote for more.
-	note := model.NewNote(title, memo, repository.DEFAULT_NOTEBOOK_ID, tags)
-	err := addNotebookToNote(note, notebookTitle)
-	if err != nil {
-		log.Panicf("Error whole finding corresponding notebook for note, error msg: %v", err)
+	jNote := &jsonNote{
+		Title:         title,
+		Memo:          memo,
+		Tags:          tags,
+		NotebookTitle: notebookTitle,
 	}
-
-	_, err = NoteDB.SaveNote(note)
-	if err != nil {
-		log.Panicf("Error while saving note, error msg: %v", err)
-	}
+	return addJSONNote(jNote)
 }
 
 func addJSONNote(jNote *jsonNote) error {
+	//All newNotes will be inserted to default notebook
+	//In next steps the notebook may change see addNotebookToNote for more.
 	note := model.NewNote(jNote.Title, jNote.Memo, repository.DEFAULT_NOTEBOOK_ID, jNote.Tags)
 	err := addNotebookToNote(note, jNote.NotebookTitle)
 	if err != nil {
-		return fmt.Errorf("Error whole finding corresponding notebook for note, error msg: %v", err)
+		return fmt.Errorf("Error while finding corresponding notebook for note, error msg: %v", err)
 	}
 
 	_, err = NoteDB.SaveNote(note)

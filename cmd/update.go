@@ -35,23 +35,24 @@ func updateWrapper(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Panicf("ID could not be converted to integer")
 	}
-	update(id, title, tags, notebookTitle, viEditor)
+	editor := &viEditor{}
+	update(id, title, tags, notebookTitle, editor)
 }
 
-func update(id int64, title string, tags []string, notebookTitle string, editor func(text string) string) {
+func update(id int64, title string, tags []string, notebookTitle string, editor Editor) error {
 	note, err := NoteDB.GetNote(id)
 	if err != nil {
-		log.Panicf("Error while retrieving Note from DB, error msg: %v", err)
+		return fmt.Errorf("Error while retrieving Note from DB, error msg: %v", err)
 	}
-	memo := editor(note.Memo)
-	err = constructUpdatedNote(note, title, notebookTitle, tags, memo)
-	if err != nil {
-		log.Panicf("Error while constructing updated note, error msg: %v", err)
+	memo := editor.edit(note.Memo)
+	jNote := &jsonNote{
+		ID:            id,
+		Title:         title,
+		Memo:          memo,
+		Tags:          tags,
+		NotebookTitle: notebookTitle,
 	}
-	err = NoteDB.UpdateNote(note)
-	if err != nil {
-		log.Panicf("Error while updating note, error msg: %v", err)
-	}
+	return updateJSONNote(jNote)
 }
 
 func updateJSONNote(jNote *jsonNote) error {
@@ -70,6 +71,10 @@ func updateJSONNote(jNote *jsonNote) error {
 	return nil
 }
 
+/*
+	If there is no removal of tag, all tags will be replaced by the provided ones,
+	in case we want only to remove specific tags, we need to pass the tags names with a "-" in front.
+*/
 func constructUpdatedNote(note *model.Note, title, notebookTitle string, tags []string, memo string) error {
 	if title != "" {
 		note.UpdateTitle(title)
@@ -86,7 +91,7 @@ func constructUpdatedNote(note *model.Note, title, notebookTitle string, tags []
 		}
 	}
 	note.RemoveTags(toBeRemoved)
-	//This case handles the update come from the terminal-ui.
+
 	if len(toBeRemoved) == 0 {
 		note.Tags = make(map[string]bool)
 	}

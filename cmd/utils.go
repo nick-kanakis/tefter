@@ -2,18 +2,23 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/nicolasmanic/tefter/model"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"strings"
-
-	"github.com/nicolasmanic/tefter/model"
 )
 
+//Editor interface
+type Editor interface {
+	edit(text string) string
+}
+type viEditor struct{}
+
 //TODO: unit test
-func viEditor(text string) string {
+func (vie viEditor) edit(text string) string {
 	vi := "vim"
 	fpath := os.TempDir() + "/tmpMemo.txt"
 	f, err := os.Create(fpath)

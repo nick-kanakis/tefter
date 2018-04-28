@@ -138,7 +138,8 @@ func createUI(jNotes []*jsonNote) *tview.Application {
 					tags := strings.Split(tagsStr, ",")
 
 					app.Suspend(func() {
-						update(toBeUpdated.ID, noteTitle, tags, notebookTitle, viEditor)
+						editor := &viEditor{}
+						update(toBeUpdated.ID, noteTitle, tags, notebookTitle, editor)
 					})
 					app.Stop()
 
