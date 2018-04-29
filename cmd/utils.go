@@ -67,24 +67,24 @@ func int2int64(input int) int64 {
 	return int64(input)
 }
 
-func collectNotesFromDB(ids []int, notebookTitles, tags []string, getAll bool) map[int64]*model.Note {
+func collectNotesFromDB(ids []int, notebookTitles, tags []string, getAll bool) (map[int64]*model.Note, error) {
 	var notesMap = make(map[int64]*model.Note, 0)
 	if getAll {
 		//Get all notes in the DB
 		allNotes, err := NoteDB.GetNotes([]int64{})
 		if err != nil {
-			log.Panicf("Error while retrieving notes by id , error msg: %v", err)
+			return nil, fmt.Errorf("Error while retrieving notes by id, error msg: %v", err)
 		}
 		for _, note := range allNotes {
 			notesMap[note.ID] = note
 		}
-		return notesMap
+		return notesMap, nil
 	}
 	if len(ids) > 0 {
 		//Add notes based on ids
 		idNotes, err := NoteDB.GetNotes(int64Slice(ids))
 		if err != nil {
-			log.Panicf("Error while retrieving notes by id, error msg: %v", err)
+			return nil, fmt.Errorf("Error while retrieving notes by id, error msg: %v", err)
 		}
 		for _, note := range idNotes {
 			notesMap[note.ID] = note
@@ -95,7 +95,7 @@ func collectNotesFromDB(ids []int, notebookTitles, tags []string, getAll bool) m
 		for _, notebookTitle := range notebookTitles {
 			notebook, err := NotebookDB.GetNotebookByTitle(notebookTitle)
 			if err != nil {
-				log.Panicf("Error while retrieving notebook for title: %v, error msg %v", notebookTitle, err)
+				return nil, fmt.Errorf("Error while retrieving notebook for title: %v, error msg %v", notebookTitle, err)
 			} else if notebook != nil {
 				for _, note := range notebook.Notes {
 					notesMap[note.ID] = note
@@ -107,13 +107,13 @@ func collectNotesFromDB(ids []int, notebookTitles, tags []string, getAll bool) m
 		//Get notes based on tags
 		tagNotes, err := NoteDB.GetNotesByTag(tags)
 		if err != nil {
-			log.Panicf("Error while retrieving notes by tag, error msg: %v", err)
+			return nil, fmt.Errorf("Error while retrieving notes by tag, error msg: %v", err)
 		}
 		for _, note := range tagNotes {
 			notesMap[note.ID] = note
 		}
 	}
-	return notesMap
+	return notesMap, nil
 }
 
 func noteMap2Slice(m map[int64]*model.Note) []*model.Note {
@@ -132,7 +132,6 @@ func tagMap2Slice(m map[string]bool) []string {
 	return tags
 }
 
-//TODO: Unit test
 func transformNotes2JSONNotes(notes []*model.Note) ([]*jsonNote, error) {
 	var jNotes []*jsonNote
 	notebookTitlesMap, err := NotebookDB.GetAllNotebooksTitle()

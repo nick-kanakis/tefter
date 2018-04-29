@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/spf13/cobra"
 	"io/ioutil"
 	"log"
@@ -28,7 +29,7 @@ var exportCmd = &cobra.Command{
 		" 4) If -a or --all flag is set all notes will be printed\n",
 	Example: "export -i 1,2,... -n notebook1,notebook2,... -t tag1,tag2,...\n " +
 		"export -a",
-	Run: export,
+	Run: exportWrapper,
 }
 
 func init() {
@@ -39,27 +40,40 @@ func init() {
 	exportCmd.Flags().BoolP("all", "a", false, "Export all notes")
 }
 
-func export(cmd *cobra.Command, args []string) {
+func exportWrapper(cmd *cobra.Command, args []string) {
 	ids, _ := cmd.Flags().GetIntSlice("ids")
 	notebookTitles, _ := cmd.Flags().GetStringSlice("notebook")
 	tags, _ := cmd.Flags().GetStringSlice("tags")
 	all, _ := cmd.Flags().GetBool("all")
-	jsonNotes, err := retrieveJSONNotes(ids, notebookTitles, tags, all)
-	if err != nil {
-		log.Panicln(err)
+	if err := export(ids, notebookTitles, tags, all); err != nil {
+		log.Fatalln(err)
 	}
-	export2File(jsonNotes)
 }
 
-func export2File(jsonNotes []*jsonNote) {
-	marshalledNotes, err := json.Marshal(jsonNotes)
+func export(ids []int, notebookTitles, tags []string, getAll bool) error {
+	jNotes, err := retrieveJSONNotes(ids, notebookTitles, tags, getAll)
 	if err != nil {
-		log.Panicf("Error while marshalling Notes, error msg: %v", err)
+		return err
 	}
-	ioutil.WriteFile("notes.json", marshalledNotes, 0644)
+	return writeNotes(jNotes)
 }
 
 func retrieveJSONNotes(ids []int, notebookTitles, tags []string, getAll bool) ([]*jsonNote, error) {
-	notes := collectNotesFromDB(ids, notebookTitles, tags, getAll)
-	return transformNotes2JSONNotes(noteMap2Slice(notes))
+	notes, err := collectNotesFromDB(ids, notebookTitles, tags, getAll)
+	if err != nil {
+		return nil, err
+	}
+	jNotes, err := transformNotes2JSONNotes(noteMap2Slice(notes))
+	if err != nil {
+		return nil, err
+	}
+	return jNotes, nil
+}
+
+func writeNotes(jsonNotes []*jsonNote) error {
+	marshalledNotes, err := json.Marshal(jsonNotes)
+	if err != nil {
+		return fmt.Errorf("Error while marshalling Notes, error msg: %v", err)
+	}
+	return ioutil.WriteFile("notes.json", marshalledNotes, 0644)
 }

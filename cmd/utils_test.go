@@ -95,12 +95,13 @@ func TestCollectNotesFromDB(t *testing.T) {
 		NotebookDB = oldNotebookDB
 		NoteDB = oldNoteDB
 	}()
-
-	noteMap := collectNotesFromDB([]int{1}, []string{"notebookTitle"}, []string{"testTag"}, false)
+	//FIXME: handle error
+	noteMap, _ := collectNotesFromDB([]int{1}, []string{"notebookTitle"}, []string{"testTag"}, false)
 	if len(noteMap) != 4 {
 		t.Error("Error while collecting notes per id, notebook title and tags")
 	}
-	allNotes := collectNotesFromDB([]int{}, []string{}, []string{}, true)
+	//FIXME: handle error
+	allNotes, _ := collectNotesFromDB([]int{}, []string{}, []string{}, true)
 	if len(allNotes) != 1 {
 		t.Error("Error while collectingall notes")
 	}

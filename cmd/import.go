@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/nicolasmanic/tefter/repository"
 	"github.com/spf13/cobra"
@@ -20,27 +21,45 @@ var importCmd = &cobra.Command{
 }
 
 func importNotesWrapper(cmd *cobra.Command, args []string) {
-	if len(args) < 1 {
-		log.Panicln("No argument passed, at least one json file path should be provided")
+	fsr := fileSystemReader{}
+	if err := importNotes(fsr, args[0]); err != nil {
+		log.Fatalln(err)
 	}
-	importNotes(args[0])
 }
 
-func importNotes(path string) {
+type fileReader interface {
+	ReadFile(string) ([]byte, error)
+}
 
-	raw, err := ioutil.ReadFile(path)
+type fileSystemReader struct{}
+
+func (fsr fileSystemReader) ReadFile(filepath string) ([]byte, error) {
+	return ioutil.ReadFile(filepath)
+}
+
+func importNotes(fr fileReader, path string) error {
+	raw, err := fr.ReadFile(path)
 	if err != nil {
-		log.Panicf("Error while reading file, error msg: %v", err)
+		return fmt.Errorf("Error while reading file, error msg: %v", err)
 	}
 
 	var jsonNotes []jsonNote
-	json.Unmarshal(raw, &jsonNotes)
+	if err = json.Unmarshal(raw, &jsonNotes); err != nil {
+		return fmt.Errorf("Could not unmarshal file at path: %v, error msg: %v", path, err)
+	}
 
 	for _, jsonNote := range jsonNotes {
 		note := model.NewNote(jsonNote.Title, jsonNote.Memo, repository.DEFAULT_NOTEBOOK_ID, jsonNote.Tags)
-		addNotebookToNote(note, jsonNote.NotebookTitle)
-		NoteDB.SaveNote(note)
+		err = addNotebookToNote(note, jsonNote.NotebookTitle)
+		if err != nil {
+			return err
+		}
+		_, err = NoteDB.SaveNote(note)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func init() {

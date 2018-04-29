@@ -22,8 +22,9 @@ func TestExportImport(t *testing.T) {
 	if err != nil {
 		t.Errorf("retrieveJSONNotes failed, error msg: %v", err)
 	}
-	export2File(jsonNotes)
-	importNotes("notes.json")
+	writeNotes(jsonNotes)
+	fsr := fileSystemReader{}
+	importNotes(fsr, "notes.json")
 }
 
 func TestImportNoArguments(t *testing.T) {

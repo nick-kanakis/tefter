@@ -48,7 +48,10 @@ func init() {
 }
 
 func collectNotes(ids []int, notebookTitles []string, tags []string, printAll bool) []*jsonNote {
-	notes := collectNotesFromDB(ids, notebookTitles, tags, printAll)
+	notes, err := collectNotesFromDB(ids, notebookTitles, tags, printAll)
+	if err != nil {
+		log.Panicln(err)
+	}
 	jNotes, err := transformNotes2JSONNotes(noteMap2Slice(notes))
 	if err != nil {
 		log.Panicln(err)
