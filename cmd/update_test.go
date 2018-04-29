@@ -26,9 +26,9 @@ func TestUpdate(t *testing.T) {
 			},
 			notebookDB: mockNotebookDBUpdate{
 				notebook: &model.Notebook{
-					ID: 1, 
+					ID:    1,
 					Title: "NotebookTitle"},
-				err:      nil,
+				err: nil,
 			},
 			notebookTitle: "title",
 			noteTitle:     "NotebookTitle",
