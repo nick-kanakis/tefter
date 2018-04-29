@@ -20,17 +20,22 @@ func init() {
 }
 
 func deleteWrapper(cmd *cobra.Command, args []string) {
+	if err := deleteArgs(args); err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func deleteArgs(args []string) error {
 	var ids = make([]int64, 0, len(args))
 	for _, argument := range args {
 		id, err := strconv.ParseInt(argument, 10, 64)
 		if err != nil {
-			log.Panicf("Could note transform input to id for argument %v", argument)
+			return fmt.Errorf("Could note transform input to id for argument: %v", argument)
 		}
 		ids = append(ids, id)
 	}
-	if err := delete(ids); err != nil {
-		log.Panicln(err)
-	}
+
+	return delete(ids)
 }
 
 func delete(ids []int64) error {
