@@ -24,12 +24,16 @@ func overviewWrapper(cmd *cobra.Command, args []string) {
 	deep, _ := cmd.Flags().GetBool("deep")
 	notebooks, err := NotebookDB.GetNotebooks([]int64{})
 	if err != nil {
-		log.Panicln(err)
+		log.Fatalln(err)
 	}
 	printOverview(notebooks, deep)
 }
 
 func printOverview(notebooks []*model.Notebook, deep bool) {
+	if len(notebooks) == 0 {
+		fmt.Println("No notebooks available")
+		return
+	}
 	fmt.Println("> Notebooks:")
 	for _, notebook := range notebooks {
 		fmt.Println(" > " + notebook.Title)
