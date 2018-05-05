@@ -33,7 +33,10 @@ var (
 			notebookTitles, _ = cmd.Flags().GetStringSlice("notebook")
 			tags, _ = cmd.Flags().GetStringSlice("tags")
 			printAll, _ = cmd.Flags().GetBool("all")
-			jNotes := collectNotes(ids, notebookTitles, tags, printAll)
+			jNotes, err := collectNotes(ids, notebookTitles, tags, printAll)
+			if err != nil {
+				log.Fatalln(err)
+			}
 			printNotes2Terminal(jNotes)
 		},
 	}
@@ -47,16 +50,16 @@ func init() {
 	printCmd.Flags().BoolP("all", "a", false, "Print all notes")
 }
 
-func collectNotes(ids []int, notebookTitles []string, tags []string, printAll bool) []*jsonNote {
+func collectNotes(ids []int, notebookTitles []string, tags []string, printAll bool) ([]*jsonNote, error) {
 	notes, err := collectNotesFromDB(ids, notebookTitles, tags, printAll)
 	if err != nil {
-		log.Panicln(err)
+		return nil, err
 	}
 	jNotes, err := transformNotes2JSONNotes(noteMap2Slice(notes))
 	if err != nil {
-		log.Panicln(err)
+		return nil, err
 	}
-	return jNotes
+	return jNotes, nil
 }
 
 func printNotes2Terminal(jNotes []*jsonNote) {
@@ -146,7 +149,7 @@ func createUI(jNotes []*jsonNote) *tview.Application {
 					})
 					app.Stop()
 
-					updatedJNotes := collectNotes(ids, notebookTitles, tags, printAll)
+					updatedJNotes, _ := collectNotes(ids, notebookTitles, tags, printAll)
 					printNotes2Terminal(updatedJNotes)
 
 				})
@@ -183,7 +186,6 @@ func constructNotesTable(jNotes []*jsonNote) *tview.Table {
 		notesTable.SetCell(row+1, 1, &tview.TableCell{Text: jNotes[row].NotebookTitle, Align: tview.AlignLeft, Color: tcell.ColorLimeGreen, Expansion: 2})
 		notesTable.SetCell(row+1, 2, &tview.TableCell{Text: jNotes[row].Title, Align: tview.AlignLeft, Color: tcell.ColorLimeGreen, Expansion: 2})
 		notesTable.SetCell(row+1, 3, &tview.TableCell{Text: strings.Join(jNotes[row].Tags, ","), Align: tview.AlignLeft, Color: tcell.ColorLimeGreen, Expansion: 2})
-
 	}
 
 	return notesTable
