@@ -8,7 +8,6 @@ import (
 )
 
 var (
-	print     = printNotes2Terminal
 	searchCmd = &cobra.Command{
 		Use:     "search",
 		Short:   "Search notes given a keyword",
@@ -29,13 +28,13 @@ func searchWrapper(cmd *cobra.Command, args []string) {
 	}
 	notes, err := search(keyword)
 	if err != nil {
-		log.Panicln(err)
+		log.Fatalln(err)
 	}
 	jNotes, err := transformNotes2JSONNotes(notes)
 	if err != nil {
-		log.Panicln(err)
+		log.Fatalln(err)
 	}
-	print(jNotes)
+	printNotes2Terminal(jNotes)
 }
 
 func search(keyword string) ([]*model.Note, error) {
