@@ -117,6 +117,6 @@ func TestConstructNotesTable(t *testing.T) {
 	}
 
 	if notesTable.GetCell(1, 3).Text != "tag1,tag2" {
-		t.Errorf("Wrong tags: expected :%q got %q ", "tag1,tag2", notesTable.GetCell(1, 3))
+		t.Errorf("Wrong tags: expected :%q got %q ", "tag1,tag2", notesTable.GetCell(1, 3).Text)
 	}
 }
