@@ -3,7 +3,7 @@ package cmd
 import (
 	"crypto/rand"
 	"encoding/json"
-	"fmt"
+	"errors"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
 	"github.com/gorilla/mux"
@@ -35,7 +35,7 @@ func (s *Server) Initialize() {
 	s.signingKey = make([]byte, 32)
 	_, err := rand.Read(s.signingKey)
 	if err != nil {
-		log.Panicln("Failed to generate signing key")
+		log.Fatalln("Failed to generate signing key")
 	}
 
 	s.Router.HandleFunc("/addNote", s.addNote).Methods("POST")
@@ -53,7 +53,7 @@ func (s *Server) Initialize() {
 
 //Run starts the server
 func (s *Server) Run(port string) {
-	fmt.Println("Server starting at port: " + port)
+	log.Println("Server starting at port: " + port)
 	log.Fatal(http.ListenAndServe(":"+port, s.Router))
 }
 
@@ -62,7 +62,7 @@ var checkTokenFunc = checkToken
 
 func (s *Server) addNote(w http.ResponseWriter, r *http.Request) {
 	if err := checkTokenFunc(r, s.signingKey); err != nil {
-		fmt.Printf("Check token failed with message: %v", err)
+		log.Printf("Invalid token, failed with message: %v", err)
 		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
 		return
 	}
@@ -70,15 +70,16 @@ func (s *Server) addNote(w http.ResponseWriter, r *http.Request) {
 	var jNote *jsonNote
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&jNote); err != nil {
-		fmt.Printf("Error while decoding jsonNote, error msg: %v", err)
+		log.Printf("Error while decoding jsonNote, error msg: %v", err)
 		respondWithError(w, http.StatusBadRequest, "Failed decoding note")
 		return
 	}
 	defer r.Body.Close()
 
 	if err := saveNoteFunc(jNote); err != nil {
-		fmt.Printf("Error while saving note, error msg: %v", err)
+		log.Println(err)
 		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 	respondWithJSON(w, http.StatusCreated, map[string]string{"result": "success"})
 }
@@ -87,7 +88,7 @@ var updateNoteFunc = updateJSONNote
 
 func (s *Server) updateNote(w http.ResponseWriter, r *http.Request) {
 	if err := checkTokenFunc(r, s.signingKey); err != nil {
-		fmt.Printf("Check token failed with message: %v", err)
+		log.Printf("Invalid token, failed with message: %v", err)
 		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
 		return
 	}
@@ -95,15 +96,16 @@ func (s *Server) updateNote(w http.ResponseWriter, r *http.Request) {
 	var jNote *jsonNote
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&jNote); err != nil {
-		fmt.Printf("Error while decoding jsonNote, error msg: %v", err)
+		log.Printf("Error while decoding jsonNote, error msg: %v", err)
 		respondWithError(w, http.StatusBadRequest, "Failed decoding note")
 		return
 	}
 	defer r.Body.Close()
 
 	if err := updateNoteFunc(jNote); err != nil {
-		fmt.Printf("Error while updating note, error msg: %v", err)
+		log.Println(err)
 		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 	respondWithJSON(w, http.StatusCreated, map[string]string{"result": "success"})
 }
@@ -112,7 +114,7 @@ var retrieveNotesFunc = retrieveJSONNotes
 
 func (s *Server) getNotes(w http.ResponseWriter, r *http.Request) {
 	if err := checkTokenFunc(r, s.signingKey); err != nil {
-		fmt.Printf("Check token failed with message: %v", err)
+		log.Printf("Invalid token, failed with message: %v", err)
 		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
 		return
 	}
@@ -120,29 +122,28 @@ func (s *Server) getNotes(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	var jsonNotes []*jsonNote
 	var err error
-	if len(vars) == 0 {
-		jsonNotes, err = retrieveNotesFunc([]int{}, []string{}, []string{}, true)
-		if err != nil {
-			respondWithError(w, http.StatusInternalServerError, err.Error())
-		}
-	} else {
-		//Comma separated list of ids, tags, notebookTitles
-		strIDs := vars["ids"]
-		strNotebookTitles := vars["notebookTitles"]
-		strTags := vars["tags"]
 
-		ids, err := parseInts(strIDs)
-		if err != nil {
-			respondWithError(w, http.StatusInternalServerError, err.Error())
-		}
-		tags := parseStrings(strTags)
-		notebookTitles := parseStrings(strNotebookTitles)
+	//Comma separated list of ids, tags, notebookTitles
+	strIDs := vars["ids"]
+	strNotebookTitles := vars["notebookTitles"]
+	strTags := vars["tags"]
 
-		jsonNotes, err = retrieveNotesFunc(ids, notebookTitles, tags, false)
-		if err != nil {
-			respondWithError(w, http.StatusInternalServerError, err.Error())
-		}
+	ids, err := parseInts(strIDs)
+	if err != nil {
+		log.Printf("Error while parsing ids, error msg: %v", err)
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
+	tags := parseStrings(strTags)
+	notebookTitles := parseStrings(strNotebookTitles)
+
+	jsonNotes, err = retrieveNotesFunc(ids, notebookTitles, tags, false)
+	if err != nil {
+		log.Println(err)
+		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
 	respondWithJSON(w, http.StatusOK, jsonNotes)
 }
 
@@ -150,7 +151,7 @@ var deleteNotesFunc = delete
 
 func (s *Server) deleteNotes(w http.ResponseWriter, r *http.Request) {
 	if err := checkTokenFunc(r, s.signingKey); err != nil {
-		fmt.Printf("Check token failed with message: %v", err)
+		log.Printf("Invalid token, failed with message: %v", err)
 		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
 		return
 	}
@@ -160,12 +161,16 @@ func (s *Server) deleteNotes(w http.ResponseWriter, r *http.Request) {
 	strIDs := vars["ids"]
 	ids, err := parseInts(strIDs)
 	if err != nil {
+		log.Printf("Error while parsing ids, error msg: %v", err)
 		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	err = deleteNotesFunc(int64Slice(ids))
 	if err != nil {
+		log.Print(err)
 		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }
@@ -174,7 +179,7 @@ var deleteNotebooksFunc = deleteNotebooks
 
 func (s *Server) deleteNotebooks(w http.ResponseWriter, r *http.Request) {
 	if err := checkTokenFunc(r, s.signingKey); err != nil {
-		fmt.Printf("Check token failed with message: %v", err)
+		log.Printf("Invalid token, failed with message: %v", err)
 		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
 		return
 	}
@@ -186,7 +191,9 @@ func (s *Server) deleteNotebooks(w http.ResponseWriter, r *http.Request) {
 
 	err := deleteNotebooksFunc(notebookTitles)
 	if err != nil {
+		log.Println(err)
 		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }
@@ -195,7 +202,7 @@ var updateNotebookFunc = updateNotebook
 
 func (s *Server) updateNotebook(w http.ResponseWriter, r *http.Request) {
 	if err := checkTokenFunc(r, s.signingKey); err != nil {
-		fmt.Printf("Check token failed with message: %v", err)
+		log.Printf("Invalid token, failed with message: %v", err)
 		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
 		return
 	}
@@ -205,7 +212,9 @@ func (s *Server) updateNotebook(w http.ResponseWriter, r *http.Request) {
 	newTitle := vars["newTitle"]
 	err := updateNotebookFunc(oldTitle, newTitle)
 	if err != nil {
+		log.Println(err)
 		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 	respondWithJSON(w, http.StatusOK, map[string]string{"result": "success"})
 }
@@ -214,7 +223,7 @@ var searchNotesFunc = search
 
 func (s *Server) searchKeyword(w http.ResponseWriter, r *http.Request) {
 	if err := checkTokenFunc(r, s.signingKey); err != nil {
-		fmt.Printf("Check token failed with message: %v", err)
+		log.Printf("Invalid token, failed with message: %v", err)
 		respondWithError(w, http.StatusUnauthorized, "Authorization failed")
 		return
 	}
@@ -223,11 +232,15 @@ func (s *Server) searchKeyword(w http.ResponseWriter, r *http.Request) {
 	keyword := vars["keyword"]
 	notes, err := searchNotesFunc(keyword)
 	if err != nil {
+		log.Println(err)
 		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 	jNotes, err := transformNotes2JSONNotes(notes)
 	if err != nil {
+		log.Println(err)
 		respondWithError(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 	respondWithJSON(w, http.StatusOK, jNotes)
 }
@@ -236,18 +249,18 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	var accountRequest *model.Account
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&accountRequest); err != nil {
-		fmt.Printf("Error while decoding account, error msg: %v", err)
+		log.Printf("Error while decoding account, error msg: %v", err)
 		respondWithError(w, http.StatusBadRequest, "Failed decoding account")
 		return
 	}
 	account, err := AccountDB.GetAccount(accountRequest.Username)
 	if err != nil {
-		fmt.Printf("Error retrieving username, error msg: %v", err)
+		log.Printf("Error retrieving username, error msg: %v", err)
 		respondWithError(w, http.StatusInternalServerError, "Error retrieving username")
 		return
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(account.Password), []byte(accountRequest.Password)); err != nil {
-		fmt.Printf("Username and password don't match, error msg: %v", err)
+		log.Printf("Username and password don't match, error msg: %v", err)
 		respondWithError(w, http.StatusUnauthorized, "Username and password don't match")
 		return
 	}
@@ -260,7 +273,7 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	})
 	signedToken, err := token.SignedString(s.signingKey)
 	if err != nil {
-		fmt.Printf("Could note sign token, error msg: %v", err)
+		log.Printf("Could note sign token, error msg: %v", err)
 		respondWithError(w, http.StatusInternalServerError, "Could note sign token")
 		return
 	}
@@ -270,7 +283,7 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 func checkToken(r *http.Request, signingKey []byte) error {
 	token, err := request.ParseFromRequest(r, request.AuthorizationHeaderExtractor, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method")
+			return nil, errors.New("Unexpected signing method")
 		}
 		return signingKey, nil
 	})
