@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"github.com/spf13/cobra"
 	"log"
@@ -20,15 +21,15 @@ func init() {
 }
 
 func updateNotebookWrapper(cmd *cobra.Command, args []string) {
-	if len(args) < 2 {
-		log.Panicf("Incorrect number of arguments passed, you must pass an old a new notebook title")
-	}
 	if err := updateNotebook(args[0], args[1]); err != nil {
-		log.Panicln(err)
+		log.Fatalln(err)
 	}
 }
 
 func updateNotebook(oldTitle, newTitle string) error {
+	if newTitle == "" {
+		return errors.New("Notebook title should not be empty")
+	}
 	notebook, err := NotebookDB.GetNotebookByTitle(oldTitle)
 	if err != nil {
 		return fmt.Errorf("Error while retrieving notebook by title, error msg: %v", err)
@@ -38,6 +39,8 @@ func updateNotebook(oldTitle, newTitle string) error {
 		if err != nil {
 			return fmt.Errorf("Error while updating notebook, error msg: %v", err)
 		}
+	} else {
+		return fmt.Errorf("No notebook with title: %v", oldTitle)
 	}
 	return nil
 }
