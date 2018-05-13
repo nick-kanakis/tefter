@@ -11,6 +11,7 @@ Notes can also be collected to notebooks and flagged with tags.
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Examples](#examples)
 
 ## Features
 - Use it without ever leaving your terminal
@@ -22,10 +23,14 @@ Notes can also be collected to notebooks and flagged with tags.
 
 ## Installation
 
-To build from source, you should have `go` installed and then run:
-
+You can download the latest version from the release page [TODO]. To build from source, you should have `go` installed and then run:
 ```
 go get github.com/nicolasmanic/tefter
 ```
+Finally put the binary in your `PATH`.
 
 ## Usage
+
+
+## Examples
+
