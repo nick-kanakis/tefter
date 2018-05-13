@@ -70,10 +70,5 @@ func (mDB mockNotebookDBUpdateNotebook) UpdateNotebook(notebook *model.Notebook)
 }
 
 func (mDB mockNotebookDBUpdateNotebook) GetNotebookByTitle(notebookTitle string) (*model.Notebook, error) {
-	/*notebook := model.NewNotebook(notebookTitle)
-	notebook.ID = 1
-	note := model.NewNote("testTitle", "testMemo", notebook.ID, []string{})
-	note.ID = 3
-	notebook.AddNote(note)*/
 	return mDB.notebook, mDB.err
 }

@@ -17,7 +17,6 @@ type Editor interface {
 }
 type viEditor struct{}
 
-//TODO: unit test
 func (vie viEditor) edit(text string) string {
 	vi := "vim"
 	fpath := os.TempDir() + "/tmpMemo.txt"
@@ -73,7 +72,7 @@ func collectNotesFromDB(ids []int, notebookTitles, tags []string, getAll bool) (
 		//Get all notes in the DB
 		allNotes, err := NoteDB.GetNotes([]int64{})
 		if err != nil {
-			return nil, fmt.Errorf("Error while retrieving notes by id, error msg: %v", err)
+			return nil, fmt.Errorf("Error while retrieving all notes, error msg: %v", err)
 		}
 		for _, note := range allNotes {
 			notesMap[note.ID] = note
@@ -95,7 +94,7 @@ func collectNotesFromDB(ids []int, notebookTitles, tags []string, getAll bool) (
 		for _, notebookTitle := range notebookTitles {
 			notebook, err := NotebookDB.GetNotebookByTitle(notebookTitle)
 			if err != nil {
-				return nil, fmt.Errorf("Error while retrieving notebook for title: %v, error msg %v", notebookTitle, err)
+				return nil, fmt.Errorf("Error while retrieving notebook by title, error msg: %v", err)
 			} else if notebook != nil {
 				for _, note := range notebook.Notes {
 					notesMap[note.ID] = note

@@ -28,7 +28,7 @@ func TestExport(t *testing.T) {
 			notebookTitles: []string{},
 			tags:           []string{},
 			getAll:         true,
-			expectedErr:    errors.New("Error while retrieving notes by id, error msg: Unexpected error"),
+			expectedErr:    errors.New("Error while retrieving all notes, error msg: Unexpected error"),
 		}, {
 			mockNotebookDB: mockNotebookDBExport{},
 			mockNoteDB:     mockNoteDBExport{},

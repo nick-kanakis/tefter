@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"github.com/nicolasmanic/tefter/model"
 	"github.com/nicolasmanic/tefter/repository"
 	"reflect"
@@ -86,54 +87,115 @@ func TestTagMap2Slice(t *testing.T) {
 }
 
 func TestCollectNotesFromDB(t *testing.T) {
-	oldNotebookDB := NotebookDB
-	oldNoteDB := NoteDB
-	NoteDB = mockNoteDBUtils{}
-	NotebookDB = mockNotebookDBUtils{}
-	//Restore interface
-	defer func() {
-		NotebookDB = oldNotebookDB
-		NoteDB = oldNoteDB
-	}()
-	//FIXME: handle error
-	noteMap, _ := collectNotesFromDB([]int{1}, []string{"notebookTitle"}, []string{"testTag"}, false)
-	if len(noteMap) != 4 {
-		t.Error("Error while collecting notes per id, notebook title and tags")
+	cases := []struct {
+		noteDB         mockNoteDBUtils
+		notebookDB     mockNotebookDBUtils
+		ids            []int
+		notebookTitles []string
+		tags           []string
+		getAll         bool
+		expectedErr    error
+	}{
+		{
+			noteDB: mockNoteDBUtils{
+				notes: []*model.Note{model.NewNote("testTitle", "testMemo", repository.DEFAULT_NOTEBOOK_ID, []string{})},
+				err:   nil,
+			},
+			notebookDB: mockNotebookDBUtils{
+				notebook: model.NewNotebook("title"),
+				err:      nil,
+			},
+			ids:            []int{1},
+			notebookTitles: []string{"title"},
+			tags:           []string{"tag"},
+			getAll:         false,
+			expectedErr:    nil,
+		}, {
+			noteDB: mockNoteDBUtils{
+				notes: nil,
+				err:   errors.New("Unexpected error"),
+			},
+			notebookDB:     mockNotebookDBUtils{},
+			ids:            []int{},
+			notebookTitles: []string{},
+			tags:           []string{},
+			getAll:         true,
+			expectedErr:    errors.New("Error while retrieving all notes, error msg: Unexpected error"),
+		}, {
+			noteDB: mockNoteDBUtils{
+				notes: nil,
+				err:   errors.New("Unexpected error"),
+			},
+			notebookDB:     mockNotebookDBUtils{},
+			ids:            []int{1},
+			notebookTitles: []string{},
+			tags:           []string{},
+			getAll:         false,
+			expectedErr:    errors.New("Error while retrieving notes by id, error msg: Unexpected error"),
+		}, {
+			noteDB: mockNoteDBUtils{},
+			notebookDB: mockNotebookDBUtils{
+				notebook: nil,
+				err:      errors.New("Unexpected error"),
+			},
+			ids:            []int{},
+			notebookTitles: []string{"title"},
+			tags:           []string{},
+			getAll:         false,
+			expectedErr:    errors.New("Error while retrieving notebook by title, error msg: Unexpected error"),
+		}, {
+			noteDB: mockNoteDBUtils{
+				notes: nil,
+				err:   errors.New("Unexpected error"),
+			},
+			notebookDB:     mockNotebookDBUtils{},
+			ids:            []int{},
+			notebookTitles: []string{},
+			tags:           []string{"tags"},
+			getAll:         false,
+			expectedErr:    errors.New("Error while retrieving notes by tag, error msg: Unexpected error"),
+		},
 	}
-	//FIXME: handle error
-	allNotes, _ := collectNotesFromDB([]int{}, []string{}, []string{}, true)
-	if len(allNotes) != 1 {
-		t.Error("Error while collectingall notes")
+
+	for _, c := range cases {
+		oldNotebookDB := NotebookDB
+		oldNoteDB := NoteDB
+		NoteDB = c.noteDB
+		NotebookDB = c.notebookDB
+		//Restore interface
+		defer func() {
+			NotebookDB = oldNotebookDB
+			NoteDB = oldNoteDB
+		}()
+
+		_, err := collectNotesFromDB(c.ids, c.notebookTitles, c.tags, c.getAll)
+		if !reflect.DeepEqual(err, c.expectedErr) {
+			t.Errorf("Expected err to be %q but it was %q", c.expectedErr, err)
+		}
 	}
+
 }
 
 type mockNotebookDBUtils struct {
 	repository.NotebookRepository
+	notebook *model.Notebook
+	err      error
 }
 
 type mockNoteDBUtils struct {
 	repository.NoteRepository
+	notes []*model.Note
+	err   error
 }
 
 func (mDB mockNoteDBUtils) GetNotesByTag(tags []string) ([]*model.Note, error) {
-	note1 := model.NewNote("testTitle", "testMemo", repository.DEFAULT_NOTEBOOK_ID, []string{})
-	note1.ID = 1
-	note2 := model.NewNote("testTitle2", "testMemo2", repository.DEFAULT_NOTEBOOK_ID, []string{})
-	note2.ID = 2
-	return []*model.Note{note1, note2}, nil
-}
-
-func (mDB mockNotebookDBUtils) GetNotebookByTitle(notebooksTitle string) (*model.Notebook, error) {
-	notebook := model.NewNotebook(notebooksTitle)
-	notebook.ID = 1
-	note := model.NewNote("testTitle", "testMemo", notebook.ID, []string{})
-	note.ID = 3
-	notebook.AddNote(note)
-	return notebook, nil
+	return mDB.notes, mDB.err
 }
 
 func (mDB mockNoteDBUtils) GetNotes(noteIDs []int64) ([]*model.Note, error) {
-	note := model.NewNote("testTitle4", "testMemo", repository.DEFAULT_NOTEBOOK_ID, []string{})
-	note.ID = 4
-	return []*model.Note{note}, nil
+	return mDB.notes, mDB.err
+}
+
+func (mDB mockNotebookDBUtils) GetNotebookByTitle(notebooksTitle string) (*model.Notebook, error) {
+	return mDB.notebook, mDB.err
 }
