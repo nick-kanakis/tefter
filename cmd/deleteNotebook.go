@@ -9,7 +9,7 @@ import (
 
 var deleteNotebooksCmd = &cobra.Command{
 	Use:     "deleteNotebook",
-	Short:   "Delete one or more notebooks based on their title",
+	Short:   "Delete one or more notebooks based on title",
 	Example: "deleteNotebook notebook notebook2...",
 	Args:    cobra.MinimumNArgs(1),
 	Run:     deleteNotebooksWrapper,

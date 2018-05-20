@@ -17,7 +17,7 @@ import (
 var (
 	accountCmd = &cobra.Command{
 		Use:   "account",
-		Short: "Add/Delete account",
+		Short: "Add/Delete/Print account",
 	}
 	addAccountCmd = &cobra.Command{
 		Use:   "add",

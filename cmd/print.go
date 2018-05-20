@@ -19,7 +19,7 @@ var (
 	printAll       bool
 	printCmd       = &cobra.Command{
 		Use:   "print",
-		Short: "Print notes based on given ids",
+		Short: "Print notes",
 		Long: "There are 4 ways to print a set of notes" +
 			" 1) Give a comma separated list of note ids" +
 			" 2) Give a comma separated list of notebook titles" +
