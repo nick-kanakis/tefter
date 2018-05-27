@@ -90,3 +90,42 @@ tefter delete 42,23
 tefter deleteNotebook lists,expenses
 ```
 
+7. Export notes all notes from "lists" and "expenses" notebooks to a json file
+```
+tefter export -n lists,expenses
+```
+
+8. Import notes from a json file at path "documents/notes.json"
+```
+tefter import documents/notes.json
+```
+
+9. Print available notebooks & notes (titles only)
+```
+tefter overview -d
+```
+
+10. Initiate the graphic interface.
+```
+tefter print -a
+```
+
+11. Search notes for "2018" keyword
+```
+tefter search 2018
+```
+
+12. Initiate rest API endpoint on port 8081
+```
+tefter serve -p 8081
+```
+
+13. Update note with id 42, remove tag "2018" and add tag "2019" also set the title to "Bali 2019"
+```
+tefter update 42 -t "Bali 2019" --tags -2018,2019
+```
+
+14. Update notebook with title "lists", to title "2018 lists"
+```
+tefter updateNotebook "lists" "2018 lists"
+```
