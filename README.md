@@ -75,18 +75,18 @@ tefter account delete
 tefter account print
 ```
 
-4. Create a new note.
+4. Create a new note, with title: "Bali 2018", tags: "vacation" & "summer" and insert it into notebook with title: "lists".
 ```
 tefter add -t "Bali 2018" --tags vacation,summer -n lists
 ```
 
-5. Delete existing note (using id).
+5. Delete notes, with id 42 & 23
 ```
 tefter delete 42,23
 ```
-6. Delete notebook (using notebook titles).
+6. Delete notebooks with title: "lists" and "expenses".
 
 ```
-tefter deleteNotebook lists,expences
+tefter deleteNotebook lists,expenses
 ```
 
