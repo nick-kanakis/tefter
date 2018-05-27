@@ -7,6 +7,10 @@ Tefter is a simple note manager written in Go, inspired by [Shiori](https://gith
 New notes can be created (with vim), updated and viewed without exiting the terminal.
 Notes can also be collected to notebooks and flagged with tags.
 
+![gui](https://github.com/nicolasmanic/tefter/blob/master/resources/print.gif)
+![vim](https://github.com/nicolasmanic/tefter/blob/master/resources/add.JPG)
+
+
 ## Table of Content
 - [Features](#features)
 - [Installation](#installation)
