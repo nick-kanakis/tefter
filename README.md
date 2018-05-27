@@ -27,11 +27,13 @@ Notes can also be collected to notebooks and flagged with tags.
 
 ## Installation
 
-You can download the latest version from the release page [TODO]. To build from source, you should have `go` installed and then run:
+You can download the latest version from the [release page](https://github.com/nicolasmanic/tefter/releases). To build from source, you should have `go` installed and then run:
 ```
 go get github.com/nicolasmanic/tefter
 ```
 Finally put the binary in your `PATH`.
+
+**Note: Vim should be available on your system!**
 
 ## Usage
 
