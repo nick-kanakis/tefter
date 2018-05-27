@@ -60,3 +60,33 @@ Use "tefter [command] --help" for more information about a command.
 
 ## Examples
 
+1. Create a new account for rest API.
+```
+tefter account add
+```
+
+2. Delete a account .
+```
+tefter account delete
+```
+
+3. Print active usernames .
+```
+tefter account print
+```
+
+4. Create a new note.
+```
+tefter add -t "Bali 2018" --tags vacation,summer -n lists
+```
+
+5. Delete existing note (using id).
+```
+tefter delete 42,23
+```
+6. Delete notebook (using notebook titles).
+
+```
+tefter deleteNotebook lists,expences
+```
+
